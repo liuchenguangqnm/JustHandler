@@ -17,13 +17,25 @@ class SecondActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        JustHandler.getEventInMain(this, object : InvokeFun("100", "200") {
+        JustHandler.getEventInMain(this, object : InvokeFun("100") {
             override fun invoke(obj: Any?) {
                 // Log.i("haha01", "$obj=======${Thread.currentThread().name}")
             }
         })
 
-        JustHandler.getEventInThread(this, object : InvokeFun("100", "200") {
+        JustHandler.getEventInMain(this, object : InvokeFun("200") {
+            override fun invoke(obj: Any?) {
+                // Log.i("haha01", "$obj=======${Thread.currentThread().name}")
+            }
+        })
+
+        JustHandler.getEventInThread(this, object : InvokeFun("100") {
+            override fun invoke(obj: Any?) {
+                // Log.i("haha02", "$obj=======${Thread.currentThread().name}")
+            }
+        })
+
+        JustHandler.getEventInThread(this, object : InvokeFun("200") {
             override fun invoke(obj: Any?) {
                 // Log.i("haha02", "$obj=======${Thread.currentThread().name}")
             }
@@ -31,7 +43,7 @@ class SecondActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        // people?.onDestroy()
+        people?.onDestroyToMsgTag("100")
         super.onDestroy()
     }
 }

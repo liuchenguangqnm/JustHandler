@@ -87,7 +87,7 @@ class JustHandler {
         }
 
         /**
-         * 获取主线程的消息
+         * 在主线程响应消息
          * @param lifecycleTarget 非 Application/Service 对象
          * @param invoke          信息回调 Function
          */
@@ -97,12 +97,23 @@ class JustHandler {
         }
 
         /**
-         * 获取子线程的消息
+         * 在任意子线程响应消息
          * @param lifecycleTarget 非 Application/Service 对象
          * @param invoke          信息回调 Function
          */
         @JvmStatic
         fun getEventInThread(lifecycleTarget: Any, invoke: InvokeFun) {
+            Register.eventRegister(lifecycleTarget, true, invoke)
+        }
+
+        /**
+         * 在消息发送方所在的线程响应消息
+         * @param lifecycleTarget 非 Application/Service 对象
+         * @param invoke          信息回调 Function
+         */
+        @JvmStatic
+        fun getEventInSendThread(lifecycleTarget: Any, invoke: InvokeFun) {
+            // wosao
             Register.eventRegister(lifecycleTarget, true, invoke)
         }
 
@@ -144,11 +155,9 @@ private class MessageFactory {
                     for (key in lifeCycleKeys) {
                         val invokeWrapper = invokeMapLifeCycle[key] ?: return@execute
                         if (!invokeWrapper.isActive) return@execute
-                        for (invoke in invokeWrapper.invokes) {
-                            if (!invoke.msgTags.contains(msgTag)) continue
-                            if (!isMainThread) invoke.invoke(data)
-                            else UiExecutor.execute { invoke.invoke(data) }
-                        }
+                        val getInvoke = invokeWrapper.getInvoke(msgTag)
+                        if (!isMainThread) getInvoke?.invoke(data)
+                        else UiExecutor.execute { getInvoke?.invoke(data) }
                     }
                 }
             }
@@ -167,15 +176,13 @@ private class Register {
         val bgInvokes = HashMap<Int, InvokeWrapper>()
 
         // 事件注册
-        fun <T : Any> eventRegister(
-            target: T, isInBg: Boolean, invoke: InvokeFun
-        ) {
+        fun <T : Any> eventRegister(target: T, isInBg: Boolean, invoke: InvokeFun) {
             // target不是Application/Activity/Fragment就不支持
             checkSupport(target.javaClass)
             // 附着 Lifecycle
             AttachLifecycle.attachLifecycle(target) {
                 // Lifecycle 附着完成，在子线程修改缓存字典
-                ThreadExecutor.execute { insertInvoke(target, isInBg, invoke) }
+                ThreadExecutor.execute { insertInvoke(target.hashCode(), isInBg, invoke) }
             }
         }
 
@@ -188,43 +195,54 @@ private class Register {
             // 借助动态代理实现HashMap的维护
             return Proxy.newProxyInstance(
                 Lifecycle::class.java.classLoader, arrayOf(Lifecycle::class.java)
-            ) { _, method, _ ->
+            ) { _, method, args ->
                 val methodName = method?.name ?: ""
                 if (methodName == "onDestroy") {
                     // 不等线程阻塞修改invoke缓存
                     invokes[key]?.isActive = false
                     bgInvokes[key]?.isActive = false
-                    invokes[key]?.invokes = arrayListOf()
-                    bgInvokes[key]?.invokes = arrayListOf()
+                    invokes[key]?.clearInvoke()
+                    bgInvokes[key]?.clearInvoke()
                     // 子线程修改缓存字典
                     ThreadExecutor.execute { removeNormalInvoke(key) }
+                } else if (methodName == "onDestroyToMsgTag") {
+                    args.map { arg ->
+                        if (arg is Array<*>) {
+                            arg.map { argItem ->
+                                if (argItem is String) removeInvoke(key, argItem)
+                            }
+                        }
+                    }
                 }
                 methodName
             } as Lifecycle
         }
 
         @GuardedBy("Register.class")
-        private fun <T : Any> insertInvoke(
-            target: T, isInBg: Boolean, invoke: InvokeFun
-        ) {
-            val key = target.hashCode()
+        private fun insertInvoke(key: Int, isInBg: Boolean, invoke: InvokeFun) {
             if (!isInBg) {
                 if (invokes[key] == null) {
                     invokes[key] = InvokeWrapper()
-                    invokes[key]!!.invokes.add(invoke)
+                    invokes[key]!!.addInvoke(invoke)
                 } else {
-                    if (!invokes[key]!!.invokes.contains(invoke) && invokes[key]!!.isActive)
-                        invokes[key]!!.invokes.add(invoke)
+                    if (invokes[key]!!.isActive)
+                        invokes[key]!!.addInvoke(invoke)
                 }
             } else {
                 if (bgInvokes[key] == null) {
                     bgInvokes[key] = InvokeWrapper()
-                    bgInvokes[key]!!.invokes.add(invoke)
+                    bgInvokes[key]!!.addInvoke(invoke)
                 } else {
-                    if (!bgInvokes[key]!!.invokes.contains(invoke) && bgInvokes[key]!!.isActive)
-                        bgInvokes[key]!!.invokes.add(invoke)
+                    if (bgInvokes[key]!!.isActive)
+                        bgInvokes[key]!!.addInvoke(invoke)
                 }
             }
+        }
+
+        @GuardedBy("Register.class")
+        private fun removeInvoke(key: Int, msgTag: String) {
+            invokes[key]?.removeInvoke(msgTag)
+            bgInvokes[key]?.removeInvoke(msgTag)
         }
 
         @GuardedBy("Register.class")

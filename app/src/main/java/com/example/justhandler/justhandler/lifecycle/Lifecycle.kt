@@ -6,4 +6,6 @@ package com.example.justhandler.justhandler.lifecycle
  */
 interface Lifecycle {
     fun onDestroy()
+
+    fun onDestroyToMsgTag(vararg msgTags: String)
 }

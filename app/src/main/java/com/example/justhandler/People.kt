@@ -12,20 +12,32 @@ class People {
     private val lifecycle = JustHandler.getLifecycle(People::class.java)
 
     fun register() {
-        JustHandler.getEventInMain(this, object : InvokeFun("100", "200") {
+        JustHandler.getEventInMain(this, object : InvokeFun("100") {
             override fun invoke(obj: Any?) {
                 Log.i("haha1", "$obj=======${Thread.currentThread().name}")
             }
         })
 
-        JustHandler.getEventInThread(this, object : InvokeFun("100", "200") {
+        JustHandler.getEventInMain(this, object : InvokeFun("200") {
+            override fun invoke(obj: Any?) {
+                Log.i("haha1", "$obj=======${Thread.currentThread().name}")
+            }
+        })
+
+        JustHandler.getEventInThread(this, object : InvokeFun("100") {
+            override fun invoke(obj: Any?) {
+                Log.i("haha2", "$obj=======${Thread.currentThread().name}")
+            }
+        })
+
+        JustHandler.getEventInThread(this, object : InvokeFun("200") {
             override fun invoke(obj: Any?) {
                 Log.i("haha2", "$obj=======${Thread.currentThread().name}")
             }
         })
     }
 
-    fun onDestroy() {
-        lifecycle.onDestroy()
+    fun onDestroyToMsgTag(vararg msgTags: String) {
+        lifecycle.onDestroyToMsgTag(*msgTags)
     }
 }
