@@ -1,18 +1,21 @@
 package com.example.justhandler.justhandler
 
+import android.annotation.SuppressLint
 import android.app.Application
 import android.app.Service
 import android.os.Handler
-import android.os.Looper
 import android.os.Message
+import android.util.Log
 import androidx.annotation.GuardedBy
 import com.example.justhandler.justhandler.excutor.ThreadExecutor
 import com.example.justhandler.justhandler.excutor.UiExecutor
 import com.example.justhandler.justhandler.invoke.InvokeFun
+import com.example.justhandler.justhandler.invoke.InvokeThreadType
 import com.example.justhandler.justhandler.invoke.InvokeWrapper
 import com.example.justhandler.justhandler.lifecycle.AttachLifecycle
 import com.example.justhandler.justhandler.lifecycle.Lifecycle
 import java.lang.IllegalArgumentException
+import java.lang.ref.WeakReference
 import java.lang.reflect.Proxy
 
 /**
@@ -30,56 +33,29 @@ class JustHandler {
          */
         @JvmStatic
         fun sendMsg(msgTag: String): Companion {
-            sendMainMsg(msgTag, null, 0)
-            sendThreadMsg(msgTag, null, 0)
+            sendMsg(msgTag, null, 0)
             return Companion
         }
 
         /**
          * 发送消息
          * @param msgTag 消息甄别 messageTag
-         * @param data    消息携带数据
+         * @param data   消息携带数据
          */
         @JvmStatic
         fun sendMsg(msgTag: String, data: Any? = null): Companion {
-            sendMainMsg(msgTag, data, 0)
-            sendThreadMsg(msgTag, data, 0)
+            sendMsg(msgTag, data, 0)
             return Companion
         }
 
         /**
          * 发送消息
          * @param msgTag 消息甄别 messageTag
-         * @param data    消息携带数据
-         * @param post    消息延迟响应毫秒数
+         * @param data   消息携带数据
+         * @param post   消息延迟响应毫秒数
          */
         @JvmStatic
         fun sendMsg(msgTag: String, data: Any? = null, post: Long = 0): Companion {
-            sendMainMsg(msgTag, data, post)
-            sendThreadMsg(msgTag, data, post)
-            return Companion
-        }
-
-        /**
-         * 发送在主线程响应的消息
-         * @param msgTag 消息甄别 messageTag
-         * @param data    消息携带数据
-         * @param post    消息延迟响应毫秒数
-         */
-        private fun sendMainMsg(msgTag: String, data: Any? = null, post: Long = 0): Companion {
-            val handler = UiExecutor.getHandler()
-            val message = MessageFactory.buildMessage(msgTag, data, handler)
-            handler.sendMessageDelayed(message, post)
-            return Companion
-        }
-
-        /**
-         * 发送在子线程响应的消息
-         * @param msgTag 消息甄别 messageTag
-         * @param data    消息携带数据
-         * @param post    消息延迟响应毫秒数
-         */
-        private fun sendThreadMsg(msgTag: String, data: Any? = null, post: Long = 0): Companion {
             val handler = ThreadExecutor.getHandler()
             val message = MessageFactory.buildMessage(msgTag, data, handler)
             handler.sendMessageDelayed(message, post)
@@ -87,34 +63,13 @@ class JustHandler {
         }
 
         /**
-         * 在主线程响应消息
+         * 响应消息
          * @param lifecycleTarget 非 Application/Service 对象
          * @param invoke          信息回调 Function
          */
         @JvmStatic
-        fun getEventInMain(lifecycleTarget: Any, invoke: InvokeFun) {
-            Register.eventRegister(lifecycleTarget, false, invoke)
-        }
-
-        /**
-         * 在任意子线程响应消息
-         * @param lifecycleTarget 非 Application/Service 对象
-         * @param invoke          信息回调 Function
-         */
-        @JvmStatic
-        fun getEventInThread(lifecycleTarget: Any, invoke: InvokeFun) {
-            Register.eventRegister(lifecycleTarget, true, invoke)
-        }
-
-        /**
-         * 在消息发送方所在的线程响应消息
-         * @param lifecycleTarget 非 Application/Service 对象
-         * @param invoke          信息回调 Function
-         */
-        @JvmStatic
-        fun getEventInSendThread(lifecycleTarget: Any, invoke: InvokeFun) {
-            // wosao
-            Register.eventRegister(lifecycleTarget, true, invoke)
+        fun getEvent(lifecycleTarget: Any, invoke: InvokeFun) {
+            Register.eventRegister(lifecycleTarget, invoke)
         }
 
         /**
@@ -145,23 +100,51 @@ private class MessageFactory {
          * @param handler 接收此 Message 的 Handler
          */
         fun buildMessage(msgTag: String, data: Any?, handler: Handler): Message {
+            // 获取发送方线程实体（这里用弱引用防止callback直接持有Thread引发内存泄漏）
+            val sendThreadWeak = WeakReference(Thread.currentThread())
+            // callback构建
             val callback = Runnable {
                 ThreadExecutor.execute {
-                    val isMainThread = handler.looper == Looper.getMainLooper()
-                    // 正式逻辑
-                    val invokeMapLifeCycle = if (isMainThread) Register.invokes
-                    else Register.bgInvokes
+                    val invokeMapLifeCycle = Register.InvokeWrappers
                     val lifeCycleKeys = ArrayList(invokeMapLifeCycle.keys)
                     for (key in lifeCycleKeys) {
                         val invokeWrapper = invokeMapLifeCycle[key] ?: return@execute
                         if (!invokeWrapper.isActive) return@execute
-                        val getInvoke = invokeWrapper.getInvoke(msgTag)
-                        if (!isMainThread) getInvoke?.invoke(data)
-                        else UiExecutor.execute { getInvoke?.invoke(data) }
+                        val invokeFunList = invokeWrapper.getInvokes(msgTag)
+                        for (invokeFun in invokeFunList) {
+                            // 在不同的线程发送回调
+                            when (invokeFun.invokeThread) {
+                                InvokeThreadType.MAIN_THREAD -> {
+                                    invokeFun.invoke(data)
+                                }
+                                InvokeThreadType.SEND_THREAD -> {
+                                    val sendThread = sendThreadWeak.get() ?: return@execute
+                                    invokeInThread(sendThread, invokeFun, data)
+                                }
+                                else -> UiExecutor.execute {
+                                    invokeFun.invoke(data)
+                                }
+                            }
+                        }
                     }
                 }
             }
             return Message.obtain(handler, callback)
+        }
+
+        // 在指定线程中执行回调方法
+        @SuppressLint("DiscouragedPrivateApi")
+        private fun invokeInThread(thread: Thread, getInvoke: InvokeFun?, data: Any?) {
+            if (!thread.isAlive) return
+            val target = try {
+                thread.javaClass.getDeclaredField("target")
+            } catch (e: NoSuchFieldException) {
+                null
+            }
+            kotlin.concurrent.thread {
+                Log.i("JustHandler1", "$data=======${thread.name}")
+                Log.i("JustHandler2", "$data=======${Thread.currentThread().name}")
+            }
         }
     }
 }
@@ -172,17 +155,20 @@ private class MessageFactory {
  */
 private class Register {
     companion object {
-        val invokes = HashMap<Int, InvokeWrapper>()
-        val bgInvokes = HashMap<Int, InvokeWrapper>()
+        val InvokeWrappers = HashMap<Int, InvokeWrapper>()
 
-        // 事件注册
-        fun <T : Any> eventRegister(target: T, isInBg: Boolean, invoke: InvokeFun) {
+        /**
+         * 事件注册
+         */
+        fun <T : Any> eventRegister(target: T, invoke: InvokeFun) {
             // target不是Application/Activity/Fragment就不支持
             checkSupport(target.javaClass)
             // 附着 Lifecycle
             AttachLifecycle.attachLifecycle(target) {
                 // Lifecycle 附着完成，在子线程修改缓存字典
-                ThreadExecutor.execute { insertInvoke(target.hashCode(), isInBg, invoke) }
+                ThreadExecutor.execute {
+                    insertInvoke(target.hashCode(), invoke)
+                }
             }
         }
 
@@ -199,12 +185,10 @@ private class Register {
                 val methodName = method?.name ?: ""
                 if (methodName == "onDestroy") {
                     // 不等线程阻塞修改invoke缓存
-                    invokes[key]?.isActive = false
-                    bgInvokes[key]?.isActive = false
-                    invokes[key]?.clearInvoke()
-                    bgInvokes[key]?.clearInvoke()
+                    InvokeWrappers[key]?.isActive = false
+                    InvokeWrappers[key]?.clearInvoke()
                     // 子线程修改缓存字典
-                    ThreadExecutor.execute { removeNormalInvoke(key) }
+                    ThreadExecutor.execute { removeInvoke(key) }
                 } else if (methodName == "onDestroyToMsgTag") {
                     args.map { arg ->
                         if (arg is Array<*>) {
@@ -219,36 +203,24 @@ private class Register {
         }
 
         @GuardedBy("Register.class")
-        private fun insertInvoke(key: Int, isInBg: Boolean, invoke: InvokeFun) {
-            if (!isInBg) {
-                if (invokes[key] == null) {
-                    invokes[key] = InvokeWrapper()
-                    invokes[key]!!.addInvoke(invoke)
-                } else {
-                    if (invokes[key]!!.isActive)
-                        invokes[key]!!.addInvoke(invoke)
-                }
-            } else {
-                if (bgInvokes[key] == null) {
-                    bgInvokes[key] = InvokeWrapper()
-                    bgInvokes[key]!!.addInvoke(invoke)
-                } else {
-                    if (bgInvokes[key]!!.isActive)
-                        bgInvokes[key]!!.addInvoke(invoke)
-                }
+        private fun insertInvoke(key: Int, invoke: InvokeFun) {
+            // 尝试注册invoke回调
+            if (InvokeWrappers[key] == null) {
+                InvokeWrappers[key] = InvokeWrapper()
+                InvokeWrappers[key]!!.addInvoke(invoke)
+            } else if (InvokeWrappers[key]!!.isActive) {
+                InvokeWrappers[key]!!.addInvoke(invoke)
             }
         }
 
         @GuardedBy("Register.class")
         private fun removeInvoke(key: Int, msgTag: String) {
-            invokes[key]?.removeInvoke(msgTag)
-            bgInvokes[key]?.removeInvoke(msgTag)
+            InvokeWrappers[key]?.removeInvoke(msgTag)
         }
 
         @GuardedBy("Register.class")
-        private fun removeNormalInvoke(key: Int) {
-            invokes.remove(key)
-            bgInvokes.remove(key)
+        private fun removeInvoke(key: Int) {
+            InvokeWrappers.remove(key)
         }
 
         // 是否是支持的参数类型

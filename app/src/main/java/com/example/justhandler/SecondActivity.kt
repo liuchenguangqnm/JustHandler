@@ -2,8 +2,10 @@ package com.example.justhandler
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import com.example.justhandler.justhandler.JustHandler
 import com.example.justhandler.justhandler.invoke.InvokeFun
+import com.example.justhandler.justhandler.invoke.InvokeThreadType
 
 class SecondActivity : AppCompatActivity() {
     private var people: People? = null
@@ -17,29 +19,33 @@ class SecondActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        JustHandler.getEventInMain(this, object : InvokeFun("100") {
-            override fun invoke(obj: Any?) {
-                // Log.i("haha01", "$obj=======${Thread.currentThread().name}")
-            }
-        })
+        JustHandler.getEvent(
+            this, object : InvokeFun("100", InvokeThreadType.MAIN_THREAD) {
+                override fun invoke(obj: Any?) {
+                    Log.i("haha01", "$obj=======${Thread.currentThread().name}")
+                }
+            })
 
-        JustHandler.getEventInMain(this, object : InvokeFun("200") {
-            override fun invoke(obj: Any?) {
-                // Log.i("haha01", "$obj=======${Thread.currentThread().name}")
-            }
-        })
+        JustHandler.getEvent(
+            this, object : InvokeFun("200", InvokeThreadType.MAIN_THREAD) {
+                override fun invoke(obj: Any?) {
+                    Log.i("haha01", "$obj=======${Thread.currentThread().name}")
+                }
+            })
 
-        JustHandler.getEventInThread(this, object : InvokeFun("100") {
-            override fun invoke(obj: Any?) {
-                // Log.i("haha02", "$obj=======${Thread.currentThread().name}")
-            }
-        })
+        JustHandler.getEvent(
+            this, object : InvokeFun("100", InvokeThreadType.RANDOM_THREAD) {
+                override fun invoke(obj: Any?) {
+                    Log.i("haha02", "$obj=======${Thread.currentThread().name}")
+                }
+            })
 
-        JustHandler.getEventInThread(this, object : InvokeFun("200") {
-            override fun invoke(obj: Any?) {
-                // Log.i("haha02", "$obj=======${Thread.currentThread().name}")
-            }
-        })
+        JustHandler.getEvent(
+            this, object : InvokeFun("200", InvokeThreadType.RANDOM_THREAD) {
+                override fun invoke(obj: Any?) {
+                    Log.i("haha02", "$obj=======${Thread.currentThread().name}")
+                }
+            })
     }
 
     override fun onDestroy() {

@@ -37,14 +37,13 @@ internal class InvokeWrapper {
     }
 
     @GuardedBy("this")
-    fun getInvoke(msgTag: String): InvokeFun? {
-        var reslut: InvokeFun? = null
-        if (!checkIsActive() || invokes.isEmpty()) return reslut
+    fun getInvokes(msgTag: String): List<InvokeFun> {
+        val result = mutableListOf<InvokeFun>()
+        if (!checkIsActive() || invokes.isEmpty()) return result
         invokes.map {
-            if (it.msgTag == msgTag) reslut = it
+            if (it.msgTag == msgTag) result.add(it)
         }
-        // TODO 为什么在密集发送消息的时候，result偶尔会取值为null
-        return reslut
+        return result
     }
 
     @GuardedBy("this")
