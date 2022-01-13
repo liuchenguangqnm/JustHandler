@@ -109,19 +109,22 @@ private class MessageFactory {
                     val lifeCycleKeys = ArrayList(invokeMapLifeCycle.keys)
                     for (key in lifeCycleKeys) {
                         val invokeWrapper = invokeMapLifeCycle[key] ?: return@execute
-                        if (!invokeWrapper.isActive) return@execute
                         val invokeFunList = invokeWrapper.getInvokes(msgTag)
                         for (invokeFun in invokeFunList) {
+                            // 如果外层包裹invoke不再活跃，则不能继续发送回调
+                            if (!invokeWrapper.isActive) break
                             // 在不同的线程发送回调
                             when (invokeFun.invokeThread) {
                                 InvokeThreadType.MAIN_THREAD -> {
-                                    invokeFun.invoke(data)
+                                    UiExecutor.execute {
+                                        invokeFun.invoke(data)
+                                    }
                                 }
                                 InvokeThreadType.SEND_THREAD -> {
                                     val sendThread = sendThreadWeak.get() ?: return@execute
                                     invokeInThread(sendThread, invokeFun, data)
                                 }
-                                else -> UiExecutor.execute {
+                                else -> {
                                     invokeFun.invoke(data)
                                 }
                             }
