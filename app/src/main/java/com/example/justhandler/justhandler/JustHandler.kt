@@ -68,7 +68,7 @@ class JustHandler {
          * @param invoke          信息回调 Function
          */
         @JvmStatic
-        fun getEvent(lifecycleTarget: Any, invoke: InvokeFun) {
+        fun getMsg(lifecycleTarget: Any, invoke: InvokeFun) {
             Register.eventRegister(lifecycleTarget, invoke)
         }
 

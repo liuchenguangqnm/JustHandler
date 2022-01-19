@@ -19,28 +19,28 @@ class SecondActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        JustHandler.getEvent(
+        JustHandler.getMsg(
             this, object : InvokeFun("100", InvokeThreadType.MAIN_THREAD) {
                 override fun invoke(obj: Any?) {
                     Log.i("haha01", "$obj=======${Thread.currentThread().name}")
                 }
             })
 
-        JustHandler.getEvent(
+        JustHandler.getMsg(
             this, object : InvokeFun("200", InvokeThreadType.MAIN_THREAD) {
                 override fun invoke(obj: Any?) {
                     Log.i("haha01", "$obj=======${Thread.currentThread().name}")
                 }
             })
 
-        JustHandler.getEvent(
+        JustHandler.getMsg(
             this, object : InvokeFun("100", InvokeThreadType.RANDOM_THREAD) {
                 override fun invoke(obj: Any?) {
                     Log.i("haha02", "$obj=======${Thread.currentThread().name}")
                 }
             })
 
-        JustHandler.getEvent(
+        JustHandler.getMsg(
             this, object : InvokeFun("200", InvokeThreadType.RANDOM_THREAD) {
                 override fun invoke(obj: Any?) {
                     Log.i("haha02", "$obj=======${Thread.currentThread().name}")

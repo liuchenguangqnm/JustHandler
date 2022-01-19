@@ -1,7 +1,6 @@
 package com.example.justhandler.justhandler.lifecycle
 
 import android.app.Activity
-import android.util.Log
 import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
