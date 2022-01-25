@@ -1,4 +1,4 @@
-package com.example.justhandler.justhandler.lifecycle
+package com.sunshine.justhandler.lifecycle
 
 import android.app.Fragment
 

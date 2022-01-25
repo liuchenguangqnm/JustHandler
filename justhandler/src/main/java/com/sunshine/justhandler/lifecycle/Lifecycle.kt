@@ -1,4 +1,4 @@
-package com.example.justhandler.justhandler.lifecycle
+package com.sunshine.justhandler.lifecycle
 
 /**
  * created by: Sunshine at 2021/11/23

@@ -1,12 +1,12 @@
-package com.example.justhandler.justhandler.lifecycle
+package com.sunshine.justhandler.lifecycle
 
 import android.app.Activity
 import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
-import com.example.justhandler.justhandler.JustHandler
-import com.example.justhandler.justhandler.excutor.ThreadExecutor
-import com.example.justhandler.justhandler.excutor.UiExecutor
+import com.sunshine.justhandler.JustHandler
+import com.sunshine.justhandler.excutor.ThreadExecutor
+import com.sunshine.justhandler.excutor.UiExecutor
 
 /**
  * created by: Sunshine at 2021/11/23

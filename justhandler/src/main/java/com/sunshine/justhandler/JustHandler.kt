@@ -1,4 +1,4 @@
-package com.example.justhandler.justhandler
+package com.sunshine.justhandler
 
 import android.annotation.SuppressLint
 import android.app.Application
@@ -7,13 +7,13 @@ import android.os.Handler
 import android.os.Message
 import android.util.Log
 import androidx.annotation.GuardedBy
-import com.example.justhandler.justhandler.excutor.ThreadExecutor
-import com.example.justhandler.justhandler.excutor.UiExecutor
-import com.example.justhandler.justhandler.invoke.InvokeFun
-import com.example.justhandler.justhandler.invoke.InvokeThreadType
-import com.example.justhandler.justhandler.invoke.InvokeWrapper
-import com.example.justhandler.justhandler.lifecycle.AttachLifecycle
-import com.example.justhandler.justhandler.lifecycle.Lifecycle
+import com.sunshine.justhandler.excutor.ThreadExecutor
+import com.sunshine.justhandler.excutor.UiExecutor
+import com.sunshine.justhandler.invoke.InvokeFun
+import com.sunshine.justhandler.invoke.InvokeThreadType
+import com.sunshine.justhandler.invoke.InvokeWrapper
+import com.sunshine.justhandler.lifecycle.AttachLifecycle
+import com.sunshine.justhandler.lifecycle.Lifecycle
 import java.lang.IllegalArgumentException
 import java.lang.ref.WeakReference
 import java.lang.reflect.Proxy

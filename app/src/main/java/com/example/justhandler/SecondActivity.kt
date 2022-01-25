@@ -3,9 +3,9 @@ package com.example.justhandler
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import com.example.justhandler.justhandler.JustHandler
-import com.example.justhandler.justhandler.invoke.InvokeFun
-import com.example.justhandler.justhandler.invoke.InvokeThreadType
+import com.sunshine.justhandler.JustHandler
+import com.sunshine.justhandler.invoke.InvokeFun
+import com.sunshine.justhandler.invoke.InvokeThreadType
 
 class SecondActivity : AppCompatActivity() {
     private var people: People? = null

@@ -1,4 +1,4 @@
-package com.example.justhandler.justhandler.safe
+package com.sunshine.justhandler.safe
 
 import android.util.Log
 

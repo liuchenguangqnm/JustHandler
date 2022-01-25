@@ -1,7 +1,7 @@
-package com.example.justhandler.justhandler.lifecycle
+package com.sunshine.justhandler.lifecycle
 
 import android.util.Log
-import com.example.justhandler.justhandler.JustHandler
+import com.sunshine.justhandler.JustHandler
 import java.lang.ref.ReferenceQueue
 import java.lang.ref.WeakReference
 import java.util.concurrent.ExecutorService

@@ -6,7 +6,7 @@ import android.os.Bundle
 import android.os.Looper
 import android.view.View
 import com.bumptech.glide.Glide
-import com.example.justhandler.justhandler.JustHandler
+import com.sunshine.justhandler.JustHandler
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

@@ -1,9 +1,9 @@
 package com.example.justhandler
 
 import android.util.Log
-import com.example.justhandler.justhandler.JustHandler
-import com.example.justhandler.justhandler.invoke.InvokeFun
-import com.example.justhandler.justhandler.invoke.InvokeThreadType
+import com.sunshine.justhandler.JustHandler
+import com.sunshine.justhandler.invoke.InvokeFun
+import com.sunshine.justhandler.invoke.InvokeThreadType
 
 /**
  * created by: Sunshine at 2021/11/28
