@@ -93,6 +93,10 @@ class JustHandler {
  */
 private class MessageFactory {
     companion object {
+        init {
+            System.loadLibrary("justhandlerC")
+        }
+
         /**
          * Message 构造方法
          * @param msgTag 消息甄别 messageTag
@@ -144,11 +148,10 @@ private class MessageFactory {
             } catch (e: NoSuchFieldException) {
                 null
             }
-            kotlin.concurrent.thread {
-                Log.i("JustHandler1", "$data=======${thread.name}")
-                Log.i("JustHandler2", "$data=======${Thread.currentThread().name}")
-            }
+            Log.i("JustHandler1", stringFromJNI())
         }
+
+        private external fun stringFromJNI(): String
     }
 }
 
