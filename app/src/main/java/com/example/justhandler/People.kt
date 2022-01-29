@@ -21,7 +21,7 @@ class People {
             })
 
         JustHandler.getMsg(
-            this, object : InvokeFun("200", InvokeThreadType.RANDOM_THREAD) {
+            this, object : InvokeFun("200", InvokeThreadType.SEND_THREAD) {
                 override fun invoke(obj: Any?) {
                     Log.i("People", "$obj=======${Thread.currentThread().name}")
                 }

@@ -18,7 +18,7 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         Looper.myQueue().addIdleHandler {
             Glide.with(MyApplication.context!!)
-                .load("https://www.2008php.com/09_Website_appreciate/2010-07-11/20100711232024.jpg")
+                .load("https://t7.baidu.com/it/u=2318403788,3418888102&fm=193&f=GIF")
                 .into(findViewById(R.id.iv_img))
             false
         }
