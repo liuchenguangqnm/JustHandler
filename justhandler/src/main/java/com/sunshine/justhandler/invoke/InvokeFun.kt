@@ -27,6 +27,12 @@ abstract class InvokeFun(val msgTag: String, val invokeThread: InvokeThreadType)
     }
 }
 
+/**
+ * 消息响应线程类型：
+ * MAIN_THREAD：在UI线程响应
+ * SEND_THREAD：在发送消息的线程中响应（如果发送消息的线程是非UI线程，则接收方的响应时机必然在该线程的代码执行结束之后）
+ * RANDOM_THREAD：在任意的非UI线程中想用
+ */
 enum class InvokeThreadType(val type: Int) {
     MAIN_THREAD(1) {
         fun getTypeValue(): Int {

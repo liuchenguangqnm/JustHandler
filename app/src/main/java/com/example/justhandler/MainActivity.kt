@@ -24,14 +24,12 @@ class MainActivity : AppCompatActivity() {
         }
 
         Thread {
-            try {
-                while (true) {
+            while (true) {
+                Thread {
                     JustHandler.sendMsg("100", "王德发100")
                     JustHandler.sendMsg("200", "王德发200")
-                    Thread.sleep(30)
-                }
-            } catch (e: InterruptedException) {
-                e.printStackTrace()
+                }.start()
+                System.gc()
             }
         }.start()
 

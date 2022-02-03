@@ -14,9 +14,5 @@ internal class UiExecutor {
         fun execute(runnable: Runnable) {
             UI_HANDLER.post(runnable)
         }
-
-        fun getHandler(): Handler {
-            return UI_HANDLER
-        }
     }
 }

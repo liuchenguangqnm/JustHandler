@@ -4,8 +4,8 @@ import android.annotation.SuppressLint
 import android.app.Application
 import android.app.Service
 import android.os.Handler
+import android.os.Looper
 import android.os.Message
-import android.util.Log
 import androidx.annotation.GuardedBy
 import com.sunshine.justhandler.excutor.ThreadExecutor
 import com.sunshine.justhandler.excutor.UiExecutor
@@ -93,10 +93,6 @@ class JustHandler {
  */
 private class MessageFactory {
     companion object {
-        init {
-            System.loadLibrary("justhandlerC")
-        }
-
         /**
          * Message 构造方法
          * @param msgTag 消息甄别 messageTag
@@ -106,11 +102,12 @@ private class MessageFactory {
         fun buildMessage(msgTag: String, data: Any?, handler: Handler): Message {
             // 获取发送方线程实体（这里用弱引用防止callback直接持有Thread引发内存泄漏）
             val sendThreadWeak = WeakReference(Thread.currentThread())
+            val isSendInMain = Looper.myLooper() == Looper.getMainLooper()
             // callback构建
             val callback = Runnable {
                 ThreadExecutor.execute {
                     val invokeMapLifeCycle = Register.InvokeWrappers
-                    val lifeCycleKeys = ArrayList(invokeMapLifeCycle.keys)
+                    val lifeCycleKeys = HashSet(invokeMapLifeCycle.keys)
                     for (key in lifeCycleKeys) {
                         val invokeWrapper = invokeMapLifeCycle[key] ?: return@execute
                         val invokeFunList = invokeWrapper.getInvokes(msgTag)
@@ -126,7 +123,9 @@ private class MessageFactory {
                                 }
                                 InvokeThreadType.SEND_THREAD -> {
                                     val sendThread = sendThreadWeak.get() ?: return@execute
-                                    invokeInThread(sendThread, invokeFun, data)
+                                    if (isSendInMain) UiExecutor.execute {
+                                        invokeFun.invoke(data)
+                                    } else invokeInThread(sendThread, invokeFun, data)
                                 }
                                 else -> {
                                     invokeFun.invoke(data)
@@ -142,16 +141,28 @@ private class MessageFactory {
         // 在指定线程中执行回调方法
         @SuppressLint("DiscouragedPrivateApi")
         private fun invokeInThread(thread: Thread, getInvoke: InvokeFun?, data: Any?) {
-            if (!thread.isAlive) return
+            try {
+                thread.join()
+            } catch (e: InterruptedException) {
+                // ignore
+            }
+
             val target = try {
                 thread.javaClass.getDeclaredField("target")
             } catch (e: NoSuchFieldException) {
                 null
-            }
-            Log.i("JustHandler1", stringFromJNI())
+            } ?: return
+            target.isAccessible = true
+            val oldTarget = target.get(thread)
+            if (thread.state == Thread.State.TERMINATED) target.set(thread, object : Runnable {
+                override fun run() {
+                    getInvoke?.invoke(data)
+                    target.set(thread, oldTarget)
+                    target.isAccessible = false
+                }
+            })
+            if (thread.state == Thread.State.TERMINATED) thread.start()
         }
-
-        private external fun stringFromJNI(): String
     }
 }
 
