@@ -19,7 +19,7 @@ import java.lang.reflect.Proxy
 internal class Register {
     companion object {
         val InvokeWrappers = HashMap<Int, InvokeWrapper>()
-        val ThreadInvokes = HashMap<Int, InvokeWrapper>()
+        val threadInvokeWrappers = HashMap<Int, InvokeWrapper>()
 
         /**
          * 事件注册
@@ -51,8 +51,8 @@ internal class Register {
                     // 不等线程阻塞修改invoke缓存
                     InvokeWrappers[key]?.isActive = false
                     InvokeWrappers[key]?.clearInvoke()
-                    ThreadInvokes[key]?.isActive = false
-                    ThreadInvokes[key]?.clearInvoke()
+                    threadInvokeWrappers[key]?.isActive = false
+                    threadInvokeWrappers[key]?.clearInvoke()
                     // 子线程修改缓存字典
                     ThreadExecutor.execute { removeInvoke(key) }
                 } else if (methodName == "onDestroyToMsgTag") {
@@ -79,11 +79,11 @@ internal class Register {
                     InvokeWrappers[key]!!.addInvoke(invoke)
                 }
             } else {
-                if (ThreadInvokes[key] == null) {
-                    ThreadInvokes[key] = InvokeWrapper()
-                    ThreadInvokes[key]!!.addInvoke(invoke)
-                } else if (ThreadInvokes[key]!!.isActive) {
-                    ThreadInvokes[key]!!.addInvoke(invoke)
+                if (threadInvokeWrappers[key] == null) {
+                    threadInvokeWrappers[key] = InvokeWrapper()
+                    threadInvokeWrappers[key]!!.addInvoke(invoke)
+                } else if (threadInvokeWrappers[key]!!.isActive) {
+                    threadInvokeWrappers[key]!!.addInvoke(invoke)
                 }
             }
         }
@@ -91,17 +91,17 @@ internal class Register {
         @GuardedBy("Register.class")
         private fun removeInvoke(key: Int, msgTag: String) {
             InvokeWrappers[key]?.removeInvoke(msgTag)
-            ThreadInvokes[key]?.removeInvoke(msgTag)
+            threadInvokeWrappers[key]?.removeInvoke(msgTag)
         }
 
         @GuardedBy("Register.class")
         private fun removeInvoke(key: Int) {
             InvokeWrappers.remove(key)
-            ThreadInvokes.remove(key)
+            threadInvokeWrappers.remove(key)
         }
 
         // 是否是支持的参数类型
-        fun checkSupport(targetClass: Class<Any>) {
+        private fun checkSupport(targetClass: Class<Any>) {
             val unSupport = Application::class.java.isAssignableFrom(targetClass) ||
                     Service::class.java.isAssignableFrom(targetClass)
             if (unSupport) {
