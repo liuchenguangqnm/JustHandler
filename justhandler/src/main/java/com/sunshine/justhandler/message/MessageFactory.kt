@@ -23,7 +23,7 @@ internal class MessageFactory {
          * @param data    消息携带数据
          * @param handler 接收此 Message 的 Handler
          */
-        fun buildMessage(msgTag: String, data: Any?, handler: Handler): Message {
+        fun buildMessage(msgTag: String, data: Any?, handler: Handler): Message? {
             // 获取发送方线程实体（这里用弱引用防止callback直接持有Thread引发内存泄漏）
             val sendThreadWeak = WeakReference(Thread.currentThread())
             val isSendInMain = Looper.myLooper() == Looper.getMainLooper()

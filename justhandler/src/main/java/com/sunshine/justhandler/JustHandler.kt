@@ -45,7 +45,7 @@ class JustHandler {
         @JvmStatic
         fun sendMsg(msgTag: String, data: Any? = null, post: Long = 0): Companion {
             val handler = ThreadExecutor.getHandler()
-            val message = MessageFactory.buildMessage(msgTag, data, handler)
+            val message = MessageFactory.buildMessage(msgTag, data, handler) ?: return Companion
             handler.sendMessageDelayed(message, post)
             return Companion
         }

@@ -5,6 +5,7 @@ import android.app.Service
 import androidx.annotation.GuardedBy
 import com.sunshine.justhandler.excutor.ThreadExecutor
 import com.sunshine.justhandler.invoke.InvokeFun
+import com.sunshine.justhandler.invoke.InvokeThreadType
 import com.sunshine.justhandler.invoke.InvokeWrapper
 import com.sunshine.justhandler.lifecycle.AttachLifecycle
 import com.sunshine.justhandler.lifecycle.Lifecycle
@@ -18,6 +19,7 @@ import java.lang.reflect.Proxy
 internal class Register {
     companion object {
         val InvokeWrappers = HashMap<Int, InvokeWrapper>()
+        val ThreadInvokes = HashMap<Int, InvokeWrapper>()
 
         /**
          * 事件注册
@@ -49,6 +51,8 @@ internal class Register {
                     // 不等线程阻塞修改invoke缓存
                     InvokeWrappers[key]?.isActive = false
                     InvokeWrappers[key]?.clearInvoke()
+                    ThreadInvokes[key]?.isActive = false
+                    ThreadInvokes[key]?.clearInvoke()
                     // 子线程修改缓存字典
                     ThreadExecutor.execute { removeInvoke(key) }
                 } else if (methodName == "onDestroyToMsgTag") {
@@ -67,22 +71,33 @@ internal class Register {
         @GuardedBy("Register.class")
         private fun insertInvoke(key: Int, invoke: InvokeFun) {
             // 尝试注册invoke回调
-            if (InvokeWrappers[key] == null) {
-                InvokeWrappers[key] = InvokeWrapper()
-                InvokeWrappers[key]!!.addInvoke(invoke)
-            } else if (InvokeWrappers[key]!!.isActive) {
-                InvokeWrappers[key]!!.addInvoke(invoke)
+            if (invoke.invokeThread != InvokeThreadType.SEND_THREAD) {
+                if (InvokeWrappers[key] == null) {
+                    InvokeWrappers[key] = InvokeWrapper()
+                    InvokeWrappers[key]!!.addInvoke(invoke)
+                } else if (InvokeWrappers[key]!!.isActive) {
+                    InvokeWrappers[key]!!.addInvoke(invoke)
+                }
+            } else {
+                if (ThreadInvokes[key] == null) {
+                    ThreadInvokes[key] = InvokeWrapper()
+                    ThreadInvokes[key]!!.addInvoke(invoke)
+                } else if (ThreadInvokes[key]!!.isActive) {
+                    ThreadInvokes[key]!!.addInvoke(invoke)
+                }
             }
         }
 
         @GuardedBy("Register.class")
         private fun removeInvoke(key: Int, msgTag: String) {
             InvokeWrappers[key]?.removeInvoke(msgTag)
+            ThreadInvokes[key]?.removeInvoke(msgTag)
         }
 
         @GuardedBy("Register.class")
         private fun removeInvoke(key: Int) {
             InvokeWrappers.remove(key)
+            ThreadInvokes.remove(key)
         }
 
         // 是否是支持的参数类型
