@@ -1,4 +1,4 @@
-package com.sunshine.justhandler
+package com.sunshine.justhandler.register
 
 import android.app.Application
 import android.app.Service
@@ -11,6 +11,8 @@ import com.sunshine.justhandler.lifecycle.AttachLifecycle
 import com.sunshine.justhandler.lifecycle.Lifecycle
 import java.lang.IllegalArgumentException
 import java.lang.reflect.Proxy
+import java.util.*
+import kotlin.collections.HashMap
 
 /**
  * created by: Sunshine at 2021/11/23
@@ -18,8 +20,13 @@ import java.lang.reflect.Proxy
  */
 internal class Register {
     companion object {
-        val InvokeWrappers = HashMap<Int, InvokeWrapper>()
+        // invokeWrapper表单（与生命周期挂钩）
+        val invokeWrappers = HashMap<Int, InvokeWrapper>()
         val threadInvokeWrappers = HashMap<Int, InvokeWrapper>()
+
+        // invokeWrapper缓存中间件
+        val invokeLifecycles = HashMap<String, LinkedList<Int>>()
+        val threadInvokeLifecycles = HashMap<String, LinkedList<Int>>()
 
         /**
          * 事件注册
@@ -49,17 +56,19 @@ internal class Register {
                 val methodName = method?.name ?: ""
                 if (methodName == "onDestroy") {
                     // 不等线程阻塞修改invoke缓存
-                    InvokeWrappers[key]?.isActive = false
-                    InvokeWrappers[key]?.clearInvoke()
+                    invokeWrappers[key]?.isActive = false
                     threadInvokeWrappers[key]?.isActive = false
-                    threadInvokeWrappers[key]?.clearInvoke()
                     // 子线程修改缓存字典
                     ThreadExecutor.execute { removeInvoke(key) }
                 } else if (methodName == "onDestroyToMsgTag") {
-                    args.map { arg ->
+                    // 遍历方法参数取出当前组件希望取消监听的msgTag
+                    args?.map { arg ->
                         if (arg is Array<*>) {
                             arg.map { argItem ->
-                                if (argItem is String) removeInvoke(key, argItem)
+                                // 子线程修改缓存字典
+                                if (argItem is String) ThreadExecutor.execute {
+                                    removeInvoke(key, argItem)
+                                }
                             }
                         }
                     }
@@ -72,32 +81,60 @@ internal class Register {
         private fun insertInvoke(key: Int, invoke: InvokeFun) {
             // 尝试注册invoke回调
             if (invoke.invokeThread != InvokeThreadType.SEND_THREAD) {
-                if (InvokeWrappers[key] == null) {
-                    InvokeWrappers[key] = InvokeWrapper()
-                    InvokeWrappers[key]!!.addInvoke(invoke)
-                } else if (InvokeWrappers[key]!!.isActive) {
-                    InvokeWrappers[key]!!.addInvoke(invoke)
+                // invokeWrapper生成或修改缓存字典
+                if (invokeWrappers[key] == null) {
+                    invokeWrappers[key] = InvokeWrapper()
+                    invokeWrappers[key]!!.addInvoke(invoke)
+                } else if (invokeWrappers[key]!!.isActive) {
+                    invokeWrappers[key]!!.addInvoke(invoke)
                 }
+                // 中间件生成或修改缓存字典
+                if (invokeLifecycles[invoke.msgTag] == null)
+                    invokeLifecycles[invoke.msgTag] = LinkedList<Int>()
+                invokeLifecycles[invoke.msgTag]!!.add(key)
             } else {
+                // invokeWrapper生成或修改缓存字典
                 if (threadInvokeWrappers[key] == null) {
                     threadInvokeWrappers[key] = InvokeWrapper()
                     threadInvokeWrappers[key]!!.addInvoke(invoke)
                 } else if (threadInvokeWrappers[key]!!.isActive) {
                     threadInvokeWrappers[key]!!.addInvoke(invoke)
                 }
+                // 中间件生成或修改缓存字典
+                if (threadInvokeLifecycles[invoke.msgTag] == null)
+                    threadInvokeLifecycles[invoke.msgTag] = LinkedList<Int>()
+                threadInvokeLifecycles[invoke.msgTag]!!.add(key)
             }
         }
 
         @GuardedBy("Register.class")
         private fun removeInvoke(key: Int, msgTag: String) {
-            InvokeWrappers[key]?.removeInvoke(msgTag)
-            threadInvokeWrappers[key]?.removeInvoke(msgTag)
+            // invokeWrapper删除对应注册
+            val invokeSize = invokeWrappers[key]?.removeInvoke(msgTag)
+            val threadInvokeSize = threadInvokeWrappers[key]?.removeInvoke(msgTag)
+            // 中间件删除对应缓存
+            if (invokeSize == 0) {
+                invokeLifecycles[msgTag]?.remove(key)
+                if (invokeLifecycles[msgTag]?.size == 0) invokeLifecycles.remove(msgTag)
+            }
+            if (threadInvokeSize == 0) {
+                threadInvokeLifecycles[msgTag]?.remove(key)
+                if (threadInvokeLifecycles[msgTag]?.size == 0) invokeLifecycles.remove(msgTag)
+            }
         }
 
         @GuardedBy("Register.class")
         private fun removeInvoke(key: Int) {
-            InvokeWrappers.remove(key)
-            threadInvokeWrappers.remove(key)
+            // invokeWrapper删除对应注册
+            val invokeWrapper = invokeWrappers.remove(key)
+            val threadInvokeWrapper = threadInvokeWrappers.remove(key)
+            // 中间件删除对应缓存
+            invokeWrapper?.getInvokes()?.map {
+                invokeLifecycles.remove(it.msgTag)
+            }
+            threadInvokeWrapper?.getInvokes()?.map {
+                threadInvokeLifecycles.remove(it.msgTag)
+            }
         }
 
         // 是否是支持的参数类型

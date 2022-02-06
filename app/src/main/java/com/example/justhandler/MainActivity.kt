@@ -7,8 +7,12 @@ import android.os.Looper
 import android.view.View
 import com.bumptech.glide.Glide
 import com.sunshine.justhandler.JustHandler
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
+    private val uiExecutor = Executors.newScheduledThreadPool(2)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -23,15 +27,10 @@ class MainActivity : AppCompatActivity() {
             false
         }
 
-        Thread {
-            while (true) {
-                Thread {
-                    JustHandler.sendMsg("100", "王德发100")
-                    JustHandler.sendMsg("200", "王德发200")
-                }.start()
-                System.gc()
-            }
-        }.start()
+        uiExecutor.scheduleAtFixedRate({
+            JustHandler.sendMsg("100", "王德发100")
+            JustHandler.sendMsg("200", "王德发200")
+        }, 0, 50, TimeUnit.MILLISECONDS)
 
         findViewById<View>(R.id.iv_img).setOnClickListener {
             startActivity(Intent(this, SecondActivity::class.java))

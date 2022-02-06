@@ -1,9 +1,9 @@
 package com.sunshine.justhandler
 
-import com.sunshine.justhandler.excutor.ThreadExecutor
 import com.sunshine.justhandler.invoke.InvokeFun
 import com.sunshine.justhandler.lifecycle.Lifecycle
-import com.sunshine.justhandler.message.MessageFactory
+import com.sunshine.justhandler.register.Register
+import com.sunshine.justhandler.sender.MessageSender
 
 
 /**
@@ -44,9 +44,7 @@ class JustHandler {
          */
         @JvmStatic
         fun sendMsg(msgTag: String, data: Any? = null, post: Long = 0): Companion {
-            val handler = ThreadExecutor.getHandler()
-            val message = MessageFactory.buildMessage(msgTag, data, handler) ?: return Companion
-            handler.sendMessageDelayed(message, post)
+            MessageSender.sendMessage(msgTag, data, post)
             return Companion
         }
 

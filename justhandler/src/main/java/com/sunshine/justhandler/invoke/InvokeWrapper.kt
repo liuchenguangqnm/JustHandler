@@ -1,6 +1,8 @@
 package com.sunshine.justhandler.invoke
 
 import androidx.annotation.GuardedBy
+import java.util.*
+import kotlin.collections.ArrayList
 
 /**
  * created by: Sunshine at 2021/11/23
@@ -13,41 +15,28 @@ internal class InvokeWrapper {
     @Volatile
     var isActive = true
 
-    private fun checkIsActive(): Boolean {
-        if (!isActive) clearInvoke()
-        return isActive
-    }
-
     @GuardedBy("this")
-    fun addInvoke(invokeFun: InvokeFun) {
-        if (!checkIsActive() || invokes.contains(invokeFun)) return
+    fun addInvoke(invokeFun: InvokeFun): Int {
+        if (invokes.contains(invokeFun)) return invokes.size
         val copyInvokes = ArrayList(invokes)
         copyInvokes.add(invokeFun)
         invokes = copyInvokes
+        return invokes.size
     }
 
     @GuardedBy("this")
-    fun removeInvoke(msgTag: String) {
-        if (!checkIsActive() || invokes.isEmpty()) return
+    fun removeInvoke(msgTag: String): Int {
+        if (invokes.isEmpty()) return invokes.size
         val copyInvokes = ArrayList(invokes)
         for (index in copyInvokes.lastIndex downTo 0) {
             if (copyInvokes[index].msgTag == msgTag) copyInvokes.removeAt(index)
         }
         invokes = copyInvokes
+        return invokes.size
     }
 
     @GuardedBy("this")
-    fun getInvokes(msgTag: String): List<InvokeFun> {
-        val result = mutableListOf<InvokeFun>()
-        if (!checkIsActive() || invokes.isEmpty()) return result
-        invokes.map {
-            if (it.msgTag == msgTag) result.add(it)
-        }
-        return result
-    }
-
-    @GuardedBy("this")
-    fun clearInvoke() {
-        invokes = arrayListOf()
+    fun getInvokes(): List<InvokeFun> {
+        return LinkedList(invokes)
     }
 }
