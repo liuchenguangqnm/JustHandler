@@ -104,6 +104,7 @@ internal class MessageSender {
                         // 不属于相关Tag，不予分发
                         if (msgTag != invokeFun.msgTag) continue
                         // 事件发送方是子线程，直接进行分发
+                        if (post > 0L) Thread.sleep(post)
                         invokeFun.invoke(data)
                     }
                 }
