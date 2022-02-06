@@ -22,28 +22,28 @@ class SecondActivity : AppCompatActivity() {
         JustHandler.getMsg(
             this, object : InvokeFun("100", InvokeThreadType.MAIN_THREAD) {
                 override fun invoke(obj: Any?) {
-                    Log.i("haha01", "$obj=======${Thread.currentThread().name}")
+                    Log.i("Activity01", "$obj=======${Thread.currentThread().name}")
                 }
             })
 
         JustHandler.getMsg(
             this, object : InvokeFun("200", InvokeThreadType.MAIN_THREAD) {
                 override fun invoke(obj: Any?) {
-                    Log.i("haha01", "$obj=======${Thread.currentThread().name}")
+                    Log.i("Activity01", "$obj=======${Thread.currentThread().name}")
                 }
             })
 
         JustHandler.getMsg(
             this, object : InvokeFun("100", InvokeThreadType.RANDOM_THREAD) {
                 override fun invoke(obj: Any?) {
-                    Log.i("haha02", "$obj=======${Thread.currentThread().name}")
+                    Log.i("Activity02", "$obj=======${Thread.currentThread().name}")
                 }
             })
 
         JustHandler.getMsg(
             this, object : InvokeFun("200", InvokeThreadType.RANDOM_THREAD) {
                 override fun invoke(obj: Any?) {
-                    Log.i("haha02", "$obj=======${Thread.currentThread().name}")
+                    Log.i("Activity02", "$obj=======${Thread.currentThread().name}")
                 }
             })
     }
