@@ -5,13 +5,13 @@ import com.sunshine.justhandler.lifecycle.Lifecycle
 import com.sunshine.justhandler.register.Register
 import com.sunshine.justhandler.sender.MessageSender
 
-
 /**
  * created by: Sunshine at 2021/11/23
  * desc: 纯粹的 Handler 主要优势：
- * 1、支持进程间通信
- * 2、支持线程间通信，任意线程发送的消息可在指定线程接收（详见 InvokeFun.InvokeThreadType）
- * 3、在 Activity、Fragment、Entity 和 自定义View 中使用时无需关注内存泄漏，可随时随地发送、接收消息
+ * 1、支持进程间通信（开发中）
+ * 2、支持在某个组件内单独取消某个事件的接收注册
+ * 3、支持线程间通信，任意线程发送的消息可在指定线程接收（详见 InvokeFun.InvokeThreadType）
+ * 4、在 Activity、Fragment、Entity 和 自定义View 中使用时无需关注内存泄漏，可随时随地发送、接收消息
  */
 class JustHandler {
     companion object {

@@ -84,26 +84,26 @@ internal class Register {
                 // invokeWrapper生成或修改缓存字典
                 if (invokeWrappers[key] == null) {
                     invokeWrappers[key] = InvokeWrapper()
-                    invokeWrappers[key]!!.addInvoke(invoke)
-                } else if (invokeWrappers[key]!!.isActive) {
-                    invokeWrappers[key]!!.addInvoke(invoke)
+                    invokeWrappers[key]?.addInvoke(invoke)
+                } else if (invokeWrappers[key]?.isActive == true) {
+                    invokeWrappers[key]?.addInvoke(invoke)
                 }
                 // 中间件生成或修改缓存字典
                 if (invokeLifecycles[invoke.msgTag] == null)
                     invokeLifecycles[invoke.msgTag] = LinkedList<Int>()
-                invokeLifecycles[invoke.msgTag]!!.add(key)
+                invokeLifecycles[invoke.msgTag]?.add(key)
             } else {
                 // invokeWrapper生成或修改缓存字典
                 if (threadInvokeWrappers[key] == null) {
                     threadInvokeWrappers[key] = InvokeWrapper()
-                    threadInvokeWrappers[key]!!.addInvoke(invoke)
-                } else if (threadInvokeWrappers[key]!!.isActive) {
-                    threadInvokeWrappers[key]!!.addInvoke(invoke)
+                    threadInvokeWrappers[key]?.addInvoke(invoke)
+                } else if (threadInvokeWrappers[key]?.isActive == true) {
+                    threadInvokeWrappers[key]?.addInvoke(invoke)
                 }
                 // 中间件生成或修改缓存字典
                 if (threadInvokeLifecycles[invoke.msgTag] == null)
                     threadInvokeLifecycles[invoke.msgTag] = LinkedList<Int>()
-                threadInvokeLifecycles[invoke.msgTag]!!.add(key)
+                threadInvokeLifecycles[invoke.msgTag]?.add(key)
             }
         }
 
