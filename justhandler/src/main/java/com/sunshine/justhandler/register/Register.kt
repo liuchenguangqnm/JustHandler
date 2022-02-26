@@ -3,6 +3,7 @@ package com.sunshine.justhandler.register
 import android.app.Application
 import android.app.Service
 import androidx.annotation.GuardedBy
+import com.sunshine.justhandler.ipc.IPCFunction
 import com.sunshine.justhandler.excutor.ThreadExecutor
 import com.sunshine.justhandler.invoke.InvokeFun
 import com.sunshine.justhandler.invoke.InvokeThreadType
@@ -91,7 +92,8 @@ internal class Register {
                 // 中间件生成或修改缓存字典
                 if (invokeLifecycles[invoke.msgTag] == null)
                     invokeLifecycles[invoke.msgTag] = LinkedList<Int>()
-                invokeLifecycles[invoke.msgTag]?.add(key)
+                if (invokeLifecycles[invoke.msgTag]?.contains(key) == false)
+                    invokeLifecycles[invoke.msgTag]?.add(key)
             } else {
                 // invokeWrapper生成或修改缓存字典
                 if (threadInvokeWrappers[key] == null) {
@@ -103,8 +105,11 @@ internal class Register {
                 // 中间件生成或修改缓存字典
                 if (threadInvokeLifecycles[invoke.msgTag] == null)
                     threadInvokeLifecycles[invoke.msgTag] = LinkedList<Int>()
-                threadInvokeLifecycles[invoke.msgTag]?.add(key)
+                if (threadInvokeLifecycles[invoke.msgTag]?.contains(key) == false)
+                    threadInvokeLifecycles[invoke.msgTag]?.add(key)
             }
+            // 尝试注册IDE通信
+            IPCFunction.ideRegister()
         }
 
         @GuardedBy("Register.class")
@@ -121,6 +126,8 @@ internal class Register {
                 threadInvokeLifecycles[msgTag]?.remove(key)
                 if (threadInvokeLifecycles[msgTag]?.size == 0) invokeLifecycles.remove(msgTag)
             }
+            // 尝试取消注册IDE通信
+            IPCFunction.ideUnRegister()
         }
 
         @GuardedBy("Register.class")
@@ -135,6 +142,8 @@ internal class Register {
             threadInvokeWrapper?.getInvokes()?.map {
                 threadInvokeLifecycles.remove(it.msgTag)
             }
+            // 尝试取消注册IDE通信
+            IPCFunction.ideUnRegister()
         }
 
         // 是否是支持的参数类型
