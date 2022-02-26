@@ -39,7 +39,7 @@ class MainActivity : AppCompatActivity() {
         uiExecutor.scheduleAtFixedRate({
             JustHandler.sendMsg("100", a)
             // JustHandler.sendMsg("200", "王德发200")
-        }, 0, 50, TimeUnit.MILLISECONDS)
+        }, 0, 2000, TimeUnit.MILLISECONDS)
 
         findViewById<View>(R.id.iv_img).setOnClickListener {
             startActivity(Intent(this, SecondActivity::class.java))

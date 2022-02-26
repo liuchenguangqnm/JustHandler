@@ -60,25 +60,25 @@ internal class IPCParser {
 
         private fun getDataSerialize(data: Any?): String? {
             if (data == null) return null
-            return when {
-                data is String -> "\"${data.javaClass.canonicalName}_${data}\""
-                data is Int -> "\"${data.javaClass.canonicalName}_${data}\""
-                data is Long -> "\"${data.javaClass.canonicalName}_${data}\""
-                data is Float -> "\"${data.javaClass.canonicalName}_${data}\""
-                data is Double -> "\"${data.javaClass.canonicalName}_${data}\""
+            when {
+                data is String -> return "\"${data.javaClass.canonicalName}_${data}\""
+                data is Int -> return "\"${data.javaClass.canonicalName}_${data}\""
+                data is Long -> return "\"${data.javaClass.canonicalName}_${data}\""
+                data is Float -> return "\"${data.javaClass.canonicalName}_${data}\""
+                data is Double -> return "\"${data.javaClass.canonicalName}_${data}\""
                 data::class.java.isArray -> {
-                    getListSerialize((data as Array<*>).toList())
+                    return getListSerialize((data as Array<*>).toList())
                 }
                 else -> {
                     for (interFace in data::class.java.interfaces) {
                         if ("java.util.List" == interFace.canonicalName) {
-                            getListSerialize(ArrayList((data as List<*>)))
+                            return getListSerialize(ArrayList((data as List<*>)))
                         }
                         if ("java.util.Map" == interFace.canonicalName) {
-                            getMapSerialize(data as Map<*, *>)
+                            return getMapSerialize(data as Map<*, *>)
                         }
                     }
-                    getAnySerialize(data)
+                    return getAnySerialize(data)
                 }
             }
         }
@@ -86,7 +86,6 @@ internal class IPCParser {
         private fun getListSerialize(list: List<*>): String {
             val strBuf = StringBuffer("{\"list\":[")
             for (index in list.indices) {
-                if (index > 0) strBuf.append(",")
                 // node
                 val indexValue = list[index]
                 val value = when {
@@ -94,8 +93,9 @@ internal class IPCParser {
                     indexValue != null -> getDataSerialize(indexValue)
                     else -> null
                 }
-                strBuf.append(value)
+                if (value != null) strBuf.append("$value,")
             }
+            if (strBuf.endsWith(",")) strBuf.delete(strBuf.length - 1, strBuf.length)
             strBuf.append("],\"type\":\"${list.javaClass.canonicalName}\"}")
             return strBuf.toString()
         }
@@ -117,7 +117,7 @@ internal class IPCParser {
                 }
                 if (!key.isNullOrEmpty()) strBuf.append("$key:$value,")
             }
-            if (strBuf.length > 1) strBuf.delete(strBuf.length - 1, strBuf.length)
+            if (strBuf.endsWith(",")) strBuf.delete(strBuf.length - 1, strBuf.length)
             strBuf.append("},\"type\":\"${map.javaClass.canonicalName}\"}")
             return strBuf.toString()
         }
@@ -147,13 +147,12 @@ internal class IPCParser {
             } catch (e: Exception) {
                 e.printStackTrace()
             }
-            if (strBuf.length > 1) strBuf.delete(strBuf.length - 1, strBuf.length)
+            if (strBuf.endsWith(",")) strBuf.delete(strBuf.length - 1, strBuf.length)
             strBuf.append("},\"type\":\"${data.javaClass.canonicalName}\"}")
             return strBuf.toString()
         }
     }
 }
-
 
 // 进程间通信包
 private data class IPCWrapper(
