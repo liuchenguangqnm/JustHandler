@@ -27,7 +27,6 @@ internal class IPCParser {
                     )
                     invoke.invoke(ipcWrapper.msgTag, data, ipcWrapper.msgLong ?: 0)
                 }
-
             } catch (e: Exception) {
                 e.printStackTrace()
             }

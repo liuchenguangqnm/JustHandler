@@ -15,7 +15,7 @@ import com.sunshine.justhandler.ipc.IPCFunction
 internal class MessageSender {
     companion object {
         /**
-         * Message 事件发送入口方法
+         * Message 事件发送入口方法（可以跨进程发送消息）
          * @param msgTag 消息甄别 messageTag
          * @param data    消息携带数据
          * @param post   消息延迟响应毫秒数
@@ -24,6 +24,17 @@ internal class MessageSender {
             asyncDispatch(msgTag, data, post)
             dispatch(msgTag, data, post)
             IPCFunction.sendIPCMsg(msgTag, data, post)
+        }
+
+        /**
+         * Message 事件发送入口方法（仅限于本进程发送消息）
+         * @param msgTag 消息甄别 messageTag
+         * @param data    消息携带数据
+         * @param post   消息延迟响应毫秒数
+         */
+        fun sendMessageInner(msgTag: String, data: Any?, post: Long) {
+            asyncDispatch(msgTag, data, post)
+            dispatch(msgTag, data, post)
         }
 
         // 异步分发事件
