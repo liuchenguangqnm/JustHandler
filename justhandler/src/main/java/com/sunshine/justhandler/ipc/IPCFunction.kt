@@ -8,7 +8,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import androidx.annotation.GuardedBy
 import com.sunshine.justhandler.JustHandler
-import com.sunshine.justhandler.excutor.UiExecutor
+import com.sunshine.justhandler.excutor.ThreadExecutor
 import com.sunshine.justhandler.register.Register
 import java.util.*
 
@@ -38,7 +38,7 @@ internal class IPCFunction {
             object : BroadcastReceiver() {
                 override fun onReceive(context: Context?, intent: Intent?) {
                     val json = intent?.getStringExtra(INTENT_KEY) ?: return
-                    UiExecutor.execute {
+                    ThreadExecutor.execute {
                         IPCParser.getData(
                             json, currentProcessName
                         ) { msgTag: String, msgData: Any?, _ ->
@@ -77,7 +77,7 @@ internal class IPCFunction {
         fun sendIPCMsg(msgTag: String, data: Any? = null, post: Long) {
             // 前置判断
             if (currentPackageName.isEmpty() || currentProcessName.isEmpty()) return
-            UiExecutor.execute {
+            ThreadExecutor.execute {
                 // 获取通信包
                 val json = IPCParser.getJson(
                     currentProcessName, msgTag, data?.toString() ?: "", post
