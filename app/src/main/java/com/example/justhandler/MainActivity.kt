@@ -3,19 +3,27 @@ package com.example.justhandler
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Handler
 import android.os.Looper
 import android.view.View
 import com.bumptech.glide.Glide
 import com.sunshine.justhandler.JustHandler
+import java.lang.Exception
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
     private val uiExecutor = Executors.newScheduledThreadPool(2)
+    private val a = mutableListOf<Any>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        a.add(0)
+        a.add("asdf")
+//        a.add(People())
+//        a.add(Handler(Looper.getMainLooper()))
+//        a.add(Exception())
     }
 
     override fun onResume() {
@@ -27,9 +35,10 @@ class MainActivity : AppCompatActivity() {
             false
         }
 
+
         uiExecutor.scheduleAtFixedRate({
-            JustHandler.sendMsg("100", "王德发100")
-            JustHandler.sendMsg("200", "王德发200")
+            JustHandler.sendMsg("100", a)
+            // JustHandler.sendMsg("200", "王德发200")
         }, 0, 50, TimeUnit.MILLISECONDS)
 
         findViewById<View>(R.id.iv_img).setOnClickListener {

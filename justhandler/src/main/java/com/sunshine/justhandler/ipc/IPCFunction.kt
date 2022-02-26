@@ -39,7 +39,7 @@ internal class IPCFunction {
                 override fun onReceive(context: Context?, intent: Intent?) {
                     val json = intent?.getStringExtra(INTENT_KEY) ?: return
                     ThreadExecutor.execute {
-                        IPCParser.getData(json, currentProcessName) { msgTag, msgData, post ->
+                        IPCParser.unSerialize(json, currentProcessName) { msgTag, msgData, post ->
                             MessageSender.sendMessageInner(msgTag, msgData, post)
                         }
                     }
@@ -77,7 +77,9 @@ internal class IPCFunction {
             if (currentPackageName.isEmpty() || currentProcessName.isEmpty()) return
             ThreadExecutor.execute {
                 // 获取通信包
-                val json = IPCParser.getJson(currentProcessName, msgTag, data, post)
+                val json = IPCParser.serialize(
+                    currentProcessName, msgTag, data, post
+                ) ?: return@execute
                 // 获取通信包intent
                 val intent = Intent(FILTER_NAME)
                 // 广播发送
