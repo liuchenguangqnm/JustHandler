@@ -6,6 +6,7 @@ import com.sunshine.justhandler.register.Register
 import com.sunshine.justhandler.excutor.ThreadExecutor
 import com.sunshine.justhandler.excutor.UiExecutor
 import com.sunshine.justhandler.invoke.InvokeThreadType
+import com.sunshine.justhandler.ipc.IPCFunction
 
 /**
  * created by: Sunshine at 2021/11/24
@@ -22,6 +23,7 @@ internal class MessageSender {
         fun sendMessage(msgTag: String, data: Any?, post: Long) {
             asyncDispatch(msgTag, data, post)
             dispatch(msgTag, data, post)
+            IPCFunction.sendIPCMsg(msgTag, data, post)
         }
 
         // 异步分发事件
