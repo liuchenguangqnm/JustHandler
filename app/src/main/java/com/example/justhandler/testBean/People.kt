@@ -1,4 +1,4 @@
-package com.example.justhandler
+package com.example.justhandler.testBean
 
 import android.util.Log
 import com.sunshine.justhandler.JustHandler

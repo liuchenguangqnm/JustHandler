@@ -3,27 +3,20 @@ package com.example.justhandler
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.Handler
 import android.os.Looper
 import android.view.View
 import com.bumptech.glide.Glide
+import com.example.justhandler.testBean.MsgBean
 import com.sunshine.justhandler.JustHandler
-import java.lang.Exception
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
-    private val uiExecutor = Executors.newScheduledThreadPool(2)
-    private val a = mutableListOf<Any>()
+    private val msgExecutor = Executors.newScheduledThreadPool(2)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        a.add(0)
-        a.add("asdf")
-//        a.add(People())
-//        a.add(Handler(Looper.getMainLooper()))
-//        a.add(Exception())
     }
 
     override fun onResume() {
@@ -35,11 +28,10 @@ class MainActivity : AppCompatActivity() {
             false
         }
 
-
-        uiExecutor.scheduleAtFixedRate({
-            JustHandler.sendMsg("100", a)
-            // JustHandler.sendMsg("200", "王德发200")
-        }, 0, 2000, TimeUnit.MILLISECONDS)
+        msgExecutor.scheduleAtFixedRate({
+            JustHandler.sendMsg("100", MsgBean("100", "王德发100"))
+            // JustHandler.sendMsg("200", MsgBean("200", "王德发200"))
+        }, 0, 1500, TimeUnit.MILLISECONDS)
 
         findViewById<View>(R.id.iv_img).setOnClickListener {
             startActivity(Intent(this, SecondActivity::class.java))

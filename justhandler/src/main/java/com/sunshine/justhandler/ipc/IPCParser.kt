@@ -1,8 +1,6 @@
 package com.sunshine.justhandler.ipc
 
 import android.util.Log
-import com.google.gson.Gson
-import org.json.JSONObject
 import java.lang.Exception
 import java.util.*
 
@@ -12,8 +10,6 @@ import java.util.*
  */
 internal class IPCParser {
     companion object {
-        private val gson = Gson()
-
         fun unSerialize(
             json: String, currentProcessName: String,
             invoke: (msgTag: String, msgData: Any?, post: Long) -> Unit
@@ -47,17 +43,6 @@ internal class IPCParser {
             return getDataSerialize(wrapper)
         }
 
-        fun getSerialize(
-            fromProcess: String, msgTag: String, msgData: Any?, msgLong: Long
-        ): String? {
-            val msgCanonical = msgData?.javaClass?.canonicalName ?: ""
-            val serializeMsgData = getDataSerialize(msgData)
-            val wrapper = IPCWrapper(
-                fromProcess, msgTag, msgCanonical, serializeMsgData, msgLong
-            )
-            return getDataSerialize(wrapper)
-        }
-
         private fun getDataSerialize(data: Any?): String? {
             if (data == null) return null
             when {
@@ -70,6 +55,7 @@ internal class IPCParser {
                     return getListSerialize((data as Array<*>).toList())
                 }
                 else -> {
+                    // 首先判断是不是字典或队列
                     for (interFace in data::class.java.interfaces) {
                         if ("java.util.List" == interFace.canonicalName) {
                             return getListSerialize(ArrayList((data as List<*>)))
@@ -78,7 +64,11 @@ internal class IPCParser {
                             return getMapSerialize(data as Map<*, *>)
                         }
                     }
-                    return getAnySerialize(data)
+                    // 其次再尝试做普通对象的序列化
+                    val loader = data.javaClass.classLoader?.javaClass?.canonicalName
+                    return if (loader == null || loader == "java.lang.BootClassLoader") {
+                        "{\"data\":{},\"type\":\"${data.javaClass.canonicalName}\"}"
+                    } else getAnySerialize(data)
                 }
             }
         }
@@ -141,8 +131,7 @@ internal class IPCParser {
                         fValue != null -> getDataSerialize(fValue)
                         else -> null
                     }
-                    strBuf.append("\"${f.name}\":$fData")
-                    strBuf.append(",")
+                    strBuf.append("\"${f.name}\":$fData,")
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -161,10 +150,4 @@ private data class IPCWrapper(
     val msgCanonical: String,
     val msgData: Any?,
     val msgLong: Long?
-)
-
-// 数据解析结果
-private data class ParseResult(
-    val isFinish: Boolean,
-    val result: StringBuffer
 )

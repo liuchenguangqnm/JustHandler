@@ -3,6 +3,7 @@ package com.example.justhandler
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import com.example.justhandler.testBean.People
 import com.sunshine.justhandler.JustHandler
 import com.sunshine.justhandler.invoke.InvokeFun
 import com.sunshine.justhandler.invoke.InvokeThreadType
