@@ -1,6 +1,7 @@
 package com.sunshine.justhandler.lifecycle
 
 import android.app.Activity
+import android.os.Looper
 import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
@@ -43,6 +44,7 @@ internal class AttachLifecycle {
 
         private fun attachLifecycle(activity: FragmentActivity, callback: Runnable) {
             UiExecutor.execute {
+                if (activity.isDestroyed) return@execute
                 val fm = activity.supportFragmentManager
                 val frTag = makeFragmentTag(activity)
                 val findFr = fm.findFragmentByTag(frTag)
@@ -58,21 +60,36 @@ internal class AttachLifecycle {
 
         private fun attachLifecycle(fragment: Fragment, callback: Runnable) {
             UiExecutor.execute {
-                val fm = fragment.childFragmentManager
-                val frTag = makeFragmentTag(fragment)
-                val findFr = fm.findFragmentByTag(frTag)
-                if (findFr == null) {
-                    val lifecycle = JustHandler.getLifecycle(fragment)
-                    val lifecycleFr = SupportLifecycleFr()
-                    lifecycleFr.setLifecycle(lifecycle)
-                    fm.beginTransaction().add(lifecycleFr, frTag).commitAllowingStateLoss()
+                if (fragment.isAdded) {
+                    val fm = fragment.childFragmentManager
+                    val frTag = makeFragmentTag(fragment)
+                    val findFr = fm.findFragmentByTag(frTag)
+                    if (findFr == null) {
+                        val lifecycle = JustHandler.getLifecycle(fragment)
+                        val lifecycleFr = SupportLifecycleFr()
+                        lifecycleFr.setLifecycle(lifecycle)
+                        fm.beginTransaction().add(lifecycleFr, frTag).commitAllowingStateLoss()
+                    }
+                    callback.run()
+                } else {
+                    try {
+                        val isCratedField = fragment.javaClass.getDeclaredField("mIsCreated")
+                        isCratedField.isAccessible = true
+                        if (isCratedField.get(fragment) != false) return@execute
+                        Looper.myQueue().addIdleHandler {
+                            attachLifecycle(fragment, callback)
+                            false
+                        }
+                    } catch (e: NoSuchFieldException) {
+                        e.printStackTrace()
+                    }
                 }
-                callback.run()
             }
         }
 
         private fun attachLifecycle(activity: Activity, callback: Runnable) {
             UiExecutor.execute {
+                if (activity.isDestroyed) return@execute
                 val fm = activity.fragmentManager
                 val frTag = makeFragmentTag(activity)
                 val findFr = fm.findFragmentByTag(frTag)
@@ -88,16 +105,24 @@ internal class AttachLifecycle {
 
         private fun attachLifecycle(fragment: android.app.Fragment, callback: Runnable) {
             UiExecutor.execute {
-                val fm = fragment.childFragmentManager
-                val frTag = makeFragmentTag(fragment)
-                val findFr = fm.findFragmentByTag(frTag)
-                if (findFr == null) {
-                    val lifecycle = JustHandler.getLifecycle(fragment)
-                    val lifecycleFr = LifecycleFr()
-                    lifecycleFr.setLifecycle(lifecycle)
-                    fm.beginTransaction().add(lifecycleFr, frTag).commitAllowingStateLoss()
+                if (fragment.isAdded) {
+                    val fm = fragment.childFragmentManager
+                    val frTag = makeFragmentTag(fragment)
+                    val findFr = fm.findFragmentByTag(frTag)
+                    if (findFr == null) {
+                        val lifecycle = JustHandler.getLifecycle(fragment)
+                        val lifecycleFr = LifecycleFr()
+                        lifecycleFr.setLifecycle(lifecycle)
+                        fm.beginTransaction().add(lifecycleFr, frTag).commitAllowingStateLoss()
+                    }
+                    callback.run()
+                } else {
+                    if (fragment.childFragmentManager?.isDestroyed != false) return@execute
+                    Looper.myQueue().addIdleHandler {
+                        attachLifecycle(fragment, callback)
+                        false
+                    }
                 }
-                callback.run()
             }
         }
 
