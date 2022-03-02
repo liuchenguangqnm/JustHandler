@@ -8,10 +8,13 @@ import com.sunshine.justhandler.sender.MessageSender
 /**
  * created by: Sunshine at 2021/11/23
  * desc: 纯粹的 Handler 主要优势：
- * 1、支持进程间通信（开发中）
- * 2、支持在某个组件内单独取消某个事件的接收注册
- * 3、支持线程间通信，任意线程发送的消息可在指定线程接收（详见 InvokeFun.InvokeThreadType）
- * 4、在 Activity、Fragment、Entity 和 自定义View 中使用时无需关注内存泄漏，可随时随地发送、接收消息
+ * 1、无学习成本，主要Api仅有 sendMsg 和 getMsg
+ * 2、工具包只引用了kotlin，不存在包冲突，接入成本低，甚至你可以将源码直接拷贝进项目里
+ * 3、所有经过 sendMsg 发送出去的消息都默认支持 App内的 进程间通信
+ * 4、你可以通过修改 sendMsg 方法的参数，决定是否将当前消息共享给对应包名的App（前提是接收方的App也用JustHandler）
+ * 5、支持在任意组件内单独取消某个事件的回调注册
+ * 6、支持线程间通信，任意线程发送的消息可在指定线程接收（详见 InvokeFun.InvokeThreadType）
+ * 7、在 Activity、Fragment、任意类 和 自定义View 中注册回调时无需关注内存泄漏，可随时随地注册并接收消息
  */
 class JustHandler {
     companion object {

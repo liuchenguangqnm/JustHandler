@@ -35,12 +35,11 @@ internal class Register {
         fun <T : Any> eventRegister(target: T, invoke: InvokeFun) {
             // target不是Application/Activity/Fragment就不支持
             checkSupport(target.javaClass)
+            val key = target.hashCode()
             // 附着 Lifecycle
             AttachLifecycle.attachLifecycle(target) {
                 // Lifecycle 附着完成，在子线程修改缓存字典
-                ThreadExecutor.execute {
-                    insertInvoke(target.hashCode(), invoke)
-                }
+                ThreadExecutor.execute { insertInvoke(key, invoke) }
             }
         }
 

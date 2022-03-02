@@ -8,6 +8,7 @@ import androidx.fragment.app.FragmentActivity
 import com.sunshine.justhandler.JustHandler
 import com.sunshine.justhandler.excutor.ThreadExecutor
 import com.sunshine.justhandler.excutor.UiExecutor
+import java.lang.ref.WeakReference
 
 /**
  * created by: Sunshine at 2021/11/23
@@ -43,13 +44,15 @@ internal class AttachLifecycle {
         }
 
         private fun attachLifecycle(activity: FragmentActivity, callback: Runnable) {
+            val weakTarget = WeakReference(activity)
             UiExecutor.execute {
-                if (activity.isDestroyed) return@execute
-                val fm = activity.supportFragmentManager
-                val frTag = makeFragmentTag(activity)
+                val target = weakTarget.get() ?: return@execute
+                if (target.isDestroyed) return@execute
+                val fm = target.supportFragmentManager
+                val frTag = makeFragmentTag(target)
                 val findFr = fm.findFragmentByTag(frTag)
                 if (findFr == null) {
-                    val lifecycle = JustHandler.getLifecycle(activity)
+                    val lifecycle = JustHandler.getLifecycle(target)
                     val lifecycleFr = SupportLifecycleFr()
                     lifecycleFr.setLifecycle(lifecycle)
                     fm.beginTransaction().add(lifecycleFr, frTag).commitAllowingStateLoss()
@@ -59,42 +62,39 @@ internal class AttachLifecycle {
         }
 
         private fun attachLifecycle(fragment: Fragment, callback: Runnable) {
+            val weakTarget = WeakReference(fragment)
             UiExecutor.execute {
-                if (fragment.isAdded) {
-                    val fm = fragment.childFragmentManager
-                    val frTag = makeFragmentTag(fragment)
+                val target = weakTarget.get() ?: return@execute
+                if (target.isAdded) {
+                    val fm = target.childFragmentManager
+                    val frTag = makeFragmentTag(target)
                     val findFr = fm.findFragmentByTag(frTag)
                     if (findFr == null) {
-                        val lifecycle = JustHandler.getLifecycle(fragment)
+                        val lifecycle = JustHandler.getLifecycle(target)
                         val lifecycleFr = SupportLifecycleFr()
                         lifecycleFr.setLifecycle(lifecycle)
                         fm.beginTransaction().add(lifecycleFr, frTag).commitAllowingStateLoss()
                     }
                     callback.run()
                 } else {
-                    try {
-                        val isCratedField = fragment.javaClass.getDeclaredField("mIsCreated")
-                        isCratedField.isAccessible = true
-                        if (isCratedField.get(fragment) != false) return@execute
-                        Looper.myQueue().addIdleHandler {
-                            attachLifecycle(fragment, callback)
-                            false
-                        }
-                    } catch (e: NoSuchFieldException) {
-                        e.printStackTrace()
+                    Looper.myQueue().addIdleHandler {
+                        attachLifecycle(target, callback)
+                        false
                     }
                 }
             }
         }
 
         private fun attachLifecycle(activity: Activity, callback: Runnable) {
+            val weakTarget = WeakReference(activity)
             UiExecutor.execute {
-                if (activity.isDestroyed) return@execute
-                val fm = activity.fragmentManager
-                val frTag = makeFragmentTag(activity)
+                val target = weakTarget.get() ?: return@execute
+                if (target.isDestroyed) return@execute
+                val fm = target.fragmentManager
+                val frTag = makeFragmentTag(target)
                 val findFr = fm.findFragmentByTag(frTag)
                 if (findFr == null) {
-                    val lifecycle = JustHandler.getLifecycle(activity)
+                    val lifecycle = JustHandler.getLifecycle(target)
                     val lifecycleFr = LifecycleFr()
                     lifecycleFr.setLifecycle(lifecycle)
                     fm.beginTransaction().add(lifecycleFr, frTag).commitAllowingStateLoss()
@@ -104,22 +104,24 @@ internal class AttachLifecycle {
         }
 
         private fun attachLifecycle(fragment: android.app.Fragment, callback: Runnable) {
+            val weakTarget = WeakReference(fragment)
             UiExecutor.execute {
-                if (fragment.isAdded) {
-                    val fm = fragment.childFragmentManager
-                    val frTag = makeFragmentTag(fragment)
+                val target = weakTarget.get() ?: return@execute
+                if (target.isAdded) {
+                    val fm = target.childFragmentManager
+                    val frTag = makeFragmentTag(target)
                     val findFr = fm.findFragmentByTag(frTag)
                     if (findFr == null) {
-                        val lifecycle = JustHandler.getLifecycle(fragment)
+                        val lifecycle = JustHandler.getLifecycle(target)
                         val lifecycleFr = LifecycleFr()
                         lifecycleFr.setLifecycle(lifecycle)
                         fm.beginTransaction().add(lifecycleFr, frTag).commitAllowingStateLoss()
                     }
                     callback.run()
                 } else {
-                    if (fragment.childFragmentManager?.isDestroyed != false) return@execute
+                    if (target.childFragmentManager?.isDestroyed != false) return@execute
                     Looper.myQueue().addIdleHandler {
-                        attachLifecycle(fragment, callback)
+                        attachLifecycle(target, callback)
                         false
                     }
                 }
@@ -127,9 +129,11 @@ internal class AttachLifecycle {
         }
 
         private fun attachLifecycle(view: View, callback: Runnable) {
+            val weakTarget = WeakReference(view)
             UiExecutor.execute {
-                val listener = ViewLifecycle(JustHandler.getLifecycle(view))
-                view.addOnAttachStateChangeListener(listener)
+                val target = weakTarget.get() ?: return@execute
+                val listener = ViewLifecycle(JustHandler.getLifecycle(target))
+                target.addOnAttachStateChangeListener(listener)
                 callback.run()
             }
         }
