@@ -19,15 +19,9 @@ internal class Serializer {
                 data is Float -> return "\"${data.javaClass.canonicalName}_${data}\""
                 data is Double -> return "\"${data.javaClass.canonicalName}_${data}\""
                 data is Array<*> -> return getListSerialize(data.toList())
-                "java.util.List" == data.javaClass.canonicalName -> {
-                    return getListSerialize(ArrayList((data as List<*>)))
-                }
-                "java.util.Map" == data.javaClass.canonicalName -> {
-                    return getMapSerialize(data as Map<*, *>)
-                }
                 else -> {
                     // 首先判断是不是字典或队列
-                    for (interFace in data::class.java.interfaces) {
+                    for (interFace in getClasses(data.javaClass)) {
                         if ("java.util.List" == interFace.canonicalName) {
                             return getListSerialize(ArrayList((data as List<*>)))
                         }
@@ -126,13 +120,9 @@ internal class Serializer {
                 data is Float -> return "\"${data.javaClass.canonicalName}_${data}\""
                 data is Double -> return "\"${data.javaClass.canonicalName}_${data}\""
                 data is Array<*> -> return "{\"list\":[],\"type\":\"${data.javaClass.canonicalName}\"}"
-                "java.util.List" == data.javaClass.canonicalName ->
-                    return "{\"list\":[],\"type\":\"${data.javaClass.canonicalName}\"}"
-                "java.util.Map" == data.javaClass.canonicalName ->
-                    return "{\"map\":{},\"type\":\"${data.javaClass.canonicalName}\"}"
                 else -> {
                     // 首先判断是不是字典或队列
-                    for (interFace in data::class.java.interfaces) {
+                    for (interFace in getClasses(data.javaClass)) {
                         if ("java.util.List" == interFace.canonicalName)
                             return "{\"list\":[],\"type\":\"${data.javaClass.canonicalName}\"}"
                         if ("java.util.Map" == interFace.canonicalName)
