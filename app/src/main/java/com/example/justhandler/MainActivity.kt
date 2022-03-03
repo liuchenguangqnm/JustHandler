@@ -3,11 +3,13 @@ package com.example.justhandler
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Handler
 import android.os.Looper
 import android.view.View
 import com.bumptech.glide.Glide
 import com.example.justhandler.testBean.MsgBean
 import com.sunshine.justhandler.JustHandler
+import java.lang.Exception
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
@@ -29,7 +31,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         msgExecutor.scheduleAtFixedRate({
-            JustHandler.sendMsg("100", MsgBean("100", "王德发100"))
+//            JustHandler.sendMsg("100", Handler(Looper.getMainLooper()))
+            JustHandler.sendMsg("200", Exception("200"))
             // JustHandler.sendMsg("200", MsgBean("200", "王德发200"))
         }, 0, 1500, TimeUnit.MILLISECONDS)
 

@@ -1,7 +1,8 @@
 package com.sunshine.justhandler.ipc
 
 import java.lang.Exception
-import java.util.ArrayList
+import java.lang.reflect.Field
+import java.util.*
 
 /**
  * created by: Sunshine at 2022/2/27
@@ -17,8 +18,12 @@ internal class Serializer {
                 data is Long -> return "\"${data.javaClass.canonicalName}_${data}\""
                 data is Float -> return "\"${data.javaClass.canonicalName}_${data}\""
                 data is Double -> return "\"${data.javaClass.canonicalName}_${data}\""
-                data::class.java.isArray -> {
-                    return getListSerialize((data as Array<*>).toList())
+                data is Array<*> -> return getListSerialize(data.toList())
+                "java.util.List" == data.javaClass.canonicalName -> {
+                    return getListSerialize(ArrayList((data as List<*>)))
+                }
+                "java.util.Map" == data.javaClass.canonicalName -> {
+                    return getMapSerialize(data as Map<*, *>)
                 }
                 else -> {
                     // 首先判断是不是字典或队列
@@ -33,8 +38,8 @@ internal class Serializer {
                     // 其次再尝试做普通对象的序列化
                     val loader = data.javaClass.classLoader?.javaClass?.canonicalName
                     return if (loader == null || loader == "java.lang.BootClassLoader") {
-                        "{\"data\":{},\"type\":\"${data.javaClass.canonicalName}\"}"
-                    } else getAnySerialize(data)
+                        getAnySerialize(data, true)
+                    } else getAnySerialize(data, false)
                 }
             }
         }
@@ -79,10 +84,10 @@ internal class Serializer {
         }
 
 
-        private fun getAnySerialize(data: Any): String {
+        private fun getAnySerialize(data: Any, isBootLoader: Boolean): String {
             val strBuf = StringBuffer("{\"data\":{")
             try {
-                val fields = data::class.java.declaredFields
+                val fields = getFields(data)
                 for (f in fields) {
                     f.isAccessible = true
                     // if (Modifier.toString(f.modifiers).contains("private")) continue
@@ -93,9 +98,14 @@ internal class Serializer {
                                 fValue
                             } else if (fValue.startsWith("[") && fValue.endsWith("]")) {
                                 fValue
-                            } else "\"${String::class.java.canonicalName}_${fValue}\""
+                            } else {
+                                "\"${String::class.java.canonicalName}_${fValue}\""
+                            }
                         }
-                        fValue != null -> getDataSerialize(fValue)
+                        fValue != null -> {
+                            if (isBootLoader) getBootSerialize(fValue)
+                            else getDataSerialize(fValue)
+                        }
                         else -> null
                     }
                     strBuf.append("\"${f.name}\":$fData,")
@@ -106,6 +116,67 @@ internal class Serializer {
             if (strBuf.endsWith(",")) strBuf.delete(strBuf.length - 1, strBuf.length)
             strBuf.append("},\"type\":\"${data.javaClass.canonicalName}\"}")
             return strBuf.toString()
+        }
+
+        private fun getBootSerialize(data: Any): String {
+            when {
+                data is String -> return "\"${data.javaClass.canonicalName}_${data}\""
+                data is Int -> return "\"${data.javaClass.canonicalName}_${data}\""
+                data is Long -> return "\"${data.javaClass.canonicalName}_${data}\""
+                data is Float -> return "\"${data.javaClass.canonicalName}_${data}\""
+                data is Double -> return "\"${data.javaClass.canonicalName}_${data}\""
+                data is Array<*> -> return "{\"list\":[],\"type\":\"${data.javaClass.canonicalName}\"}"
+                "java.util.List" == data.javaClass.canonicalName ->
+                    return "{\"list\":[],\"type\":\"${data.javaClass.canonicalName}\"}"
+                "java.util.Map" == data.javaClass.canonicalName ->
+                    return "{\"map\":{},\"type\":\"${data.javaClass.canonicalName}\"}"
+                else -> {
+                    // 首先判断是不是字典或队列
+                    for (interFace in data::class.java.interfaces) {
+                        if ("java.util.List" == interFace.canonicalName)
+                            return "{\"list\":[],\"type\":\"${data.javaClass.canonicalName}\"}"
+                        if ("java.util.Map" == interFace.canonicalName)
+                            return "{\"map\":{},\"type\":\"${data.javaClass.canonicalName}\"}"
+                    }
+                    // 否则返回普通对象的Json串
+                    return "{\"data\":{},\"type\":\"${data.javaClass.canonicalName}\"}"
+                }
+            }
+        }
+
+        private fun getFields(data: Any): LinkedList<Field> {
+            // 初始化结果
+            val result = LinkedList<Field>()
+            // 初始化排重map并填充
+            val map = LinkedHashMap<String, Field>()
+            val classes = getClasses(data.javaClass)
+            classes.forEach { clazz ->
+                clazz.declaredFields.forEach { field ->
+                    if (isAdd(field, map)) map[field.name] = field
+                }
+            }
+            // 返回结果填充
+            map.forEach { result.add(it.value) }
+            return result
+        }
+
+        private fun getClasses(
+            dataClass: Class<*>, input: LinkedList<Class<*>> = LinkedList()
+        ): List<Class<*>> {
+            // 添加参数class
+            input.add(dataClass)
+            dataClass.interfaces.forEach { input.add(it) }
+            // 获取父类class
+            val superclass: Class<*> = dataClass.superclass ?: return input
+            getClasses(superclass, input)
+            // 结果
+            return input
+        }
+
+        private fun isAdd(field: Field, map: LinkedHashMap<String, Field>): Boolean {
+            return !(field.name == "shadow\$_klass_" ||
+                    field.name == "shadow\$_monitor_" ||
+                    map.containsKey(field.name))
         }
     }
 }

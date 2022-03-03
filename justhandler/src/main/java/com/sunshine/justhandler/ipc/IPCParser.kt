@@ -14,19 +14,19 @@ internal class IPCParser {
             json: String, currentProcessName: String,
             invoke: (msgTag: String, msgData: Any?, post: Long) -> Unit
         ) {
-            try {
-                val clazz = Class.forName("com.example.justhandler.testBean.MsgBean")
-                clazz.declaredConstructors.forEach {
-                    it.isAccessible = true
-                    for (parameterType in it.parameterTypes) {
-                        Log.i("haha", parameterType.canonicalName ?: "null")
-                    }
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
+//            try {
+//                val clazz = Class.forName("com.example.justhandler.testBean.MsgBean")
+//                clazz.declaredConstructors.forEach {
+//                    it.isAccessible = true
+//                    for (parameterType in it.parameterTypes) {
+//                        Log.i("haha", parameterType.canonicalName ?: "null")
+//                    }
+//                }
+//            } catch (e: Exception) {
+//                e.printStackTrace()
+//            }
 
-//            Log.i("haha", json)
+            Log.i("haha", json)
 //            try {
 //                val ipcWrapper = gson.fromJson(json, IPCWrapper::class.java)
 //                if (ipcWrapper.msgTag.isEmpty()) return
@@ -47,10 +47,9 @@ internal class IPCParser {
         fun serialize(
             fromProcess: String, msgTag: String, msgData: Any?, msgLong: Long
         ): String? {
-            val msgCanonical = msgData?.javaClass?.canonicalName ?: ""
             val serializeMsgData = getDataSerialize(msgData)
             val wrapper = IPCWrapper(
-                fromProcess, msgTag, msgCanonical, serializeMsgData, msgLong
+                fromProcess, msgTag, serializeMsgData, msgLong
             )
             return getDataSerialize(wrapper)
         }
@@ -61,7 +60,6 @@ internal class IPCParser {
 private data class IPCWrapper(
     val fromProcess: String,
     val msgTag: String,
-    val msgCanonical: String,
-    val msgData: Any?,
+    val msgData: String?,
     val msgLong: Long?
 )
