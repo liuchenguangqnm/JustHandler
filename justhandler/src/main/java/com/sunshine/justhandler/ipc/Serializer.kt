@@ -12,13 +12,13 @@ internal class Serializer {
     companion object {
         fun getDataSerialize(data: Any?): String? {
             if (data == null) return null
-            when {
-                data is String -> return "\"${data.javaClass.canonicalName}_${data}\""
-                data is Int -> return "\"${data.javaClass.canonicalName}_${data}\""
-                data is Long -> return "\"${data.javaClass.canonicalName}_${data}\""
-                data is Float -> return "\"${data.javaClass.canonicalName}_${data}\""
-                data is Double -> return "\"${data.javaClass.canonicalName}_${data}\""
-                data is Array<*> -> return getListSerialize(data.toList())
+            when (data) {
+                is String -> return "\"${data.javaClass.canonicalName}_${data}\""
+                is Int -> return "\"${data.javaClass.canonicalName}_${data}\""
+                is Long -> return "\"${data.javaClass.canonicalName}_${data}\""
+                is Float -> return "\"${data.javaClass.canonicalName}_${data}\""
+                is Double -> return "\"${data.javaClass.canonicalName}_${data}\""
+                is Array<*> -> return getListSerialize(data.toList())
                 else -> {
                     // 首先判断是不是字典或队列
                     for (interFace in getClasses(data.javaClass)) {
@@ -31,7 +31,8 @@ internal class Serializer {
                     }
                     // 其次再尝试做普通对象的序列化
                     val loader = data.javaClass.classLoader?.javaClass?.canonicalName
-                    return if (loader == null || loader == "java.lang.BootClassLoader") {
+                        ?: "{\"data\":{},\"type\":\"${data.javaClass.canonicalName}\"}"
+                    return if (loader == "java.lang.BootClassLoader") {
                         getAnySerialize(data, true)
                     } else getAnySerialize(data, false)
                 }
@@ -113,13 +114,13 @@ internal class Serializer {
         }
 
         private fun getBootSerialize(data: Any): String {
-            when {
-                data is String -> return "\"${data.javaClass.canonicalName}_${data}\""
-                data is Int -> return "\"${data.javaClass.canonicalName}_${data}\""
-                data is Long -> return "\"${data.javaClass.canonicalName}_${data}\""
-                data is Float -> return "\"${data.javaClass.canonicalName}_${data}\""
-                data is Double -> return "\"${data.javaClass.canonicalName}_${data}\""
-                data is Array<*> -> return "{\"list\":[],\"type\":\"${data.javaClass.canonicalName}\"}"
+            when (data) {
+                is String -> return "\"${data.javaClass.canonicalName}_${data}\""
+                is Int -> return "\"${data.javaClass.canonicalName}_${data}\""
+                is Long -> return "\"${data.javaClass.canonicalName}_${data}\""
+                is Float -> return "\"${data.javaClass.canonicalName}_${data}\""
+                is Double -> return "\"${data.javaClass.canonicalName}_${data}\""
+                is Array<*> -> return "{\"list\":[],\"type\":\"${data.javaClass.canonicalName}\"}"
                 else -> {
                     // 首先判断是不是字典或队列
                     for (interFace in getClasses(data.javaClass)) {
