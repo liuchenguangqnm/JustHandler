@@ -2,6 +2,7 @@ package com.sunshine.justhandler.ipc
 
 import java.lang.Exception
 import java.lang.reflect.Field
+import java.lang.reflect.Modifier
 import java.util.*
 
 /**
@@ -85,7 +86,6 @@ internal class Serializer {
                 val fields = getFields(data)
                 for (f in fields) {
                     f.isAccessible = true
-                    // if (Modifier.toString(f.modifiers).contains("private")) continue
                     val fValue = f.get(data)
                     val fData = when {
                         fValue is String -> {
@@ -165,9 +165,10 @@ internal class Serializer {
         }
 
         private fun isAdd(field: Field, map: LinkedHashMap<String, Field>): Boolean {
-            return !(field.name == "shadow\$_klass_" ||
-                    field.name == "shadow\$_monitor_" ||
-                    map.containsKey(field.name))
+            val modifiers = Modifier.toString(field.modifiers)
+            return !(modifiers.contains("transient")
+                    || modifiers.contains("static")
+                    || map.containsKey(field.name))
         }
     }
 }

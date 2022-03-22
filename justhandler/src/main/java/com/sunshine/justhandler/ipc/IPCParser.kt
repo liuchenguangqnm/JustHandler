@@ -2,7 +2,6 @@ package com.sunshine.justhandler.ipc
 
 import android.util.Log
 import com.sunshine.justhandler.ipc.Serializer.Companion.getDataSerialize
-import java.lang.Exception
 
 /**
  * created by: Sunshine at 2022/2/25
@@ -14,31 +13,15 @@ internal class IPCParser {
             json: String, currentProcessName: String,
             invoke: (msgTag: String, msgData: Any?, post: Long) -> Unit
         ) {
-//            try {
-//                val clazz = Class.forName("com.example.justhandler.testBean.MsgBean")
-//                clazz.declaredConstructors.forEach {
-//                    it.isAccessible = true
-//                    for (parameterType in it.parameterTypes) {
-//                        Log.i("haha", parameterType.canonicalName ?: "null")
-//                    }
-//                }
-//            } catch (e: Exception) {
-//                e.printStackTrace()
-//            }
 
             Log.i("haha", json)
+
 //            try {
-//                val ipcWrapper = gson.fromJson(json, IPCWrapper::class.java)
-//                if (ipcWrapper.msgTag.isEmpty()) return
-//                if (currentProcessName == ipcWrapper.fromProcess) return
-//                if (ipcWrapper.msgCanonical.isEmpty()) {
-//                    invoke.invoke(ipcWrapper.msgTag, null, ipcWrapper.msgLong ?: 0)
-//                } else {
-//                    val data = gson.fromJson(
-//                        ipcWrapper.msgData, Class.forName(ipcWrapper.msgCanonical)
-//                    )
-//                    invoke.invoke(ipcWrapper.msgTag, data, ipcWrapper.msgLong ?: 0)
-//                }
+//                val clazz = Class.forName("com.example.justhandler.testBean.MsgBean")
+//                Log.i("haha0", "=============${clazz.canonicalName}")
+//                val field = clazz.getDeclaredField("tag")
+//                field.isAccessible = true
+//                Log.i("haha1", field.name)
 //            } catch (e: Exception) {
 //                e.printStackTrace()
 //            }
