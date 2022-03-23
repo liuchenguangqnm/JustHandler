@@ -1,6 +1,5 @@
 package com.sunshine.justhandler.ipc
 
-import android.util.Log
 import com.sunshine.justhandler.ipc.Serializer.Companion.getDataSerialize
 
 /**
@@ -9,22 +8,11 @@ import com.sunshine.justhandler.ipc.Serializer.Companion.getDataSerialize
  */
 internal class IPCParser {
     companion object {
-        fun unSerialize(
+        fun antiSerialize(
             json: String, currentProcessName: String,
             invoke: (msgTag: String, msgData: Any?, post: Long) -> Unit
         ) {
-
-            Log.i("haha", json)
-
-//            try {
-//                val clazz = Class.forName("com.example.justhandler.testBean.MsgBean")
-//                Log.i("haha0", "=============${clazz.canonicalName}")
-//                val field = clazz.getDeclaredField("tag")
-//                field.isAccessible = true
-//                Log.i("haha1", field.name)
-//            } catch (e: Exception) {
-//                e.printStackTrace()
-//            }
+            val data = AntiSerializer.getData(json)
         }
 
         fun serialize(

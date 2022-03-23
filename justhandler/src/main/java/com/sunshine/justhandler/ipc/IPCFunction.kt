@@ -39,7 +39,7 @@ internal class IPCFunction {
                 override fun onReceive(context: Context?, intent: Intent?) {
                     val json = intent?.getStringExtra(INTENT_KEY) ?: return
                     ThreadExecutor.execute {
-                        IPCParser.unSerialize(json, currentProcessName) { msgTag, msgData, post ->
+                        IPCParser.antiSerialize(json, currentProcessName) { msgTag, msgData, post ->
                             MessageSender.sendMessageInner(msgTag, msgData, post)
                         }
                     }
