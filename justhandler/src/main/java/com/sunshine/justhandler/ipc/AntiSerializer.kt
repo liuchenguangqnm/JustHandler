@@ -1,12 +1,12 @@
 package com.sunshine.justhandler.ipc
 
 import android.annotation.SuppressLint
+import android.util.Log
+import com.sunshine.justhandler.ipc.serializer.UnSafeApi
 import org.json.JSONObject
 import java.lang.reflect.Field
 import java.lang.reflect.Modifier
 import java.util.*
-import java.util.Collection
-import java.util.Map
 import kotlin.collections.LinkedHashMap
 
 /**
@@ -15,23 +15,8 @@ import kotlin.collections.LinkedHashMap
  */
 class AntiSerializer {
     companion object {
-        private val unSafeClass by lazy {
-            Class.forName("sun.misc.Unsafe")
-        }
-        private val unSafe by lazy {
-            val theUnsafeField = unSafeClass.getDeclaredField("theUnsafe")
-            theUnsafeField.isAccessible = true
-            theUnsafeField.get(null)
-        }
-        private val allocateInstance by lazy {
-            unSafeClass.getMethod("allocateInstance", Class::class.java)
-        }
-        private val objectFieldOffset by lazy {
-            unSafeClass.getMethod("objectFieldOffset", Field::class.java)
-        }
-
-
         fun getData(json: String): Any? {
+            Log.i("haha1", json)
             val jsonObj = JSONObject(json)
             parseJsonObj(jsonObj)
 
@@ -66,7 +51,7 @@ class AntiSerializer {
         }
 
         @SuppressLint("DiscouragedPrivateApi")
-        private fun <T> getInstance(data: JSONObject, clazz: Class<T>): T? {
+        private fun getInstance(data: JSONObject, clazz: Class<*>): Any? {
             when {
                 clazz.isArray -> {
                     return null
@@ -79,15 +64,15 @@ class AntiSerializer {
                 }
                 else -> return try {
                     // 初始化对象
-                    val instance = allocateInstance.invoke(unSafe, clazz)
+                    val instance = UnSafeApi.allocateInstance(clazz) ?: return null
                     // 成员变量赋值
-                    val fields = getFields(clazz)
-                    for (f in fields) {
-                        val value = data.opt(f.name)
-                        val fOffset = objectFieldOffset.invoke(unSafe, f)
+                    for (f in getFields(clazz)) {
+                        UnSafeApi.setFieldData(data, f, instance)
                     }
-                    return instance as T
+                    Log.i("haha2", Serializer.getDataSerialize(instance) ?: "null")
+                    return instance
                 } catch (e: Exception) {
+                    Log.i("haha-0", "$e")
                     null
                 }
             }

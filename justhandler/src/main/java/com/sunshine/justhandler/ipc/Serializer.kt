@@ -14,11 +14,11 @@ internal class Serializer {
         fun getDataSerialize(data: Any?): String? {
             if (data == null) return null
             when (data) {
-                is String -> return "\"${data.javaClass.canonicalName}*${data}\""
-                is Int -> return "\"${data.javaClass.canonicalName}*${data}\""
-                is Long -> return "\"${data.javaClass.canonicalName}*${data}\""
-                is Float -> return "\"${data.javaClass.canonicalName}*${data}\""
-                is Double -> return "\"${data.javaClass.canonicalName}*${data}\""
+                is String -> return "\"${data}\""
+                is Int -> return "$data"
+                is Long -> return "$data"
+                is Float -> return "$data"
+                is Double -> return "$data"
                 is Array<*> -> return getListSerialize(data.toList())
                 else -> {
                     // 首先判断是不是字典或队列
@@ -46,7 +46,7 @@ internal class Serializer {
                 // node
                 val indexValue = list[index]
                 val value = when {
-                    indexValue is String -> "\"${String::class.java.canonicalName}*${indexValue}\""
+                    indexValue is String -> "\"$indexValue\""
                     indexValue != null -> getDataSerialize(indexValue)
                     else -> null
                 }
@@ -62,13 +62,15 @@ internal class Serializer {
             map.entries.forEach {
                 // key
                 val key = when {
-                    it.key is String -> "\"${String::class.java.canonicalName}*${it.key}\""
-                    it.key != null -> getDataSerialize(it.key)
+                    it.key is String -> "\"${it.key}\""
+                    it.key != null -> {
+                        "\"${(it.key)!!.javaClass.canonicalName}*${getDataSerialize(it.key)}\""
+                    }
                     else -> null
                 }
                 // value
                 val value = when {
-                    it.value is String -> "\"${String::class.java.canonicalName}*${it.value}\""
+                    it.value is String -> "\"${it.value}\""
                     it.value != null -> getDataSerialize(it.value)
                     else -> null
                 }
@@ -94,7 +96,7 @@ internal class Serializer {
                             } else if (fValue.startsWith("[") && fValue.endsWith("]")) {
                                 fValue
                             } else {
-                                "\"${String::class.java.canonicalName}*${fValue}\""
+                                "\"${fValue}\""
                             }
                         }
                         fValue != null -> {
@@ -115,11 +117,11 @@ internal class Serializer {
 
         private fun getBootSerialize(data: Any): String {
             when (data) {
-                is String -> return "\"${data.javaClass.canonicalName}*${data}\""
-                is Int -> return "\"${data.javaClass.canonicalName}*${data}\""
-                is Long -> return "\"${data.javaClass.canonicalName}*${data}\""
-                is Float -> return "\"${data.javaClass.canonicalName}*${data}\""
-                is Double -> return "\"${data.javaClass.canonicalName}*${data}\""
+                is String -> return "\"${data}\""
+                is Int -> return "$data"
+                is Long -> return "$data"
+                is Float -> return "$data"
+                is Double -> return "$data"
                 is Array<*> -> return "{\"list\":[],\"type\":\"${data.javaClass.canonicalName}\"}"
                 else -> {
                     // 首先判断是不是字典或队列
