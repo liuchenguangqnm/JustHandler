@@ -1,8 +1,8 @@
 package com.sunshine.justhandler.ipc
 
-import android.annotation.SuppressLint
-import android.util.Log
 import com.sunshine.justhandler.ipc.serializer.UnSafeApi
+import org.json.JSONArray
+import org.json.JSONException
 import org.json.JSONObject
 import java.lang.reflect.Field
 import java.lang.reflect.Modifier
@@ -15,65 +15,63 @@ import kotlin.collections.LinkedHashMap
  */
 class AntiSerializer {
     companion object {
-        fun getData(json: String): Any? {
-            Log.i("haha1", json)
-            val jsonObj = JSONObject(json)
-            parseJsonObj(jsonObj)
-
-//            try {
-//                val clazz = Class.forName("com.example.justhandler.testBean.MsgBean")
-//                val field = clazz.getDeclaredField("a")
-//                field.isAccessible = true
-//                Log.i("haha1", field.name)
-//            } catch (e: Exception) {
-//                e.printStackTrace()
-//            }
-
-            return null
-        }
-
-        private fun parseJsonObj(jsonObj: JSONObject?): Any? {
-            val type = jsonObj?.optString("type")
-            val data = jsonObj?.optJSONObject("data")
+        fun parseJson(json: String): Any? {
+            val jsonObj = try {
+                JSONObject(json)
+            } catch (e: JSONException) {
+                return null
+            }
+            val type = jsonObj.optString("type")
+            val list = jsonObj.optJSONArray("list")
+            val map = jsonObj.optJSONObject("map")
+            val data = jsonObj.optJSONObject("data")
             var result: Any? = data?.toString()
-            if (data == null || type.isNullOrEmpty()) return result
+            if (type.isNullOrEmpty()) return result
+            // 获取class对象
+            val clazz = Class.forName(type)
+            // 获取目标对象
             try {
-                // 获取class对象
-                val clazz = Class.forName(type)
-                // 构造目标对象
-                val obj = getInstance(data, clazz)
-                // 返回生成的对象
-                result = obj
+                if (data != null) {
+                    val obj = getInstance(data, clazz)
+                    if (obj != null) result = obj
+                } else if (map != null) {
+                    val obj = getInstance(map, clazz)
+                    if (obj != null) result = obj
+                } else if (list != null) {
+                    val obj = getInstance(list, clazz)
+                    if (obj != null) result = obj
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
             }
             return result
         }
 
-        @SuppressLint("DiscouragedPrivateApi")
-        private fun getInstance(data: JSONObject, clazz: Class<*>): Any? {
-            when {
+        private fun getInstance(data: JSONArray, clazz: Class<*>): Any? {
+            return when {
                 clazz.isArray -> {
                     return null
                 }
                 Collection::class.java.isAssignableFrom(clazz) -> {
                     return null
                 }
+                else -> null
+            }
+        }
+
+        private fun getInstance(data: JSONObject, clazz: Class<*>): Any? {
+            return when {
                 Map::class.java.isAssignableFrom(clazz) -> {
-                    return null
+                    null
                 }
-                else -> return try {
+                else -> {
                     // 初始化对象
-                    val instance = UnSafeApi.allocateInstance(clazz) ?: return null
+                    val instance = UnSafeApi.getInstance(clazz) ?: return null
                     // 成员变量赋值
                     for (f in getFields(clazz)) {
                         UnSafeApi.setFieldData(data, f, instance)
                     }
-                    Log.i("haha2", Serializer.getDataSerialize(instance) ?: "null")
-                    return instance
-                } catch (e: Exception) {
-                    Log.i("haha-0", "$e")
-                    null
+                    instance
                 }
             }
         }

@@ -9,26 +9,32 @@ import com.sunshine.justhandler.ipc.Serializer.Companion.getDataSerialize
 internal class IPCParser {
     companion object {
         fun antiSerialize(
-            json: String, currentProcessName: String,
+            wrapperJson: String, currentProcessName: String,
             invoke: (msgTag: String, msgData: Any?, post: Long) -> Unit
         ) {
-            val data = AntiSerializer.getData(json)
+            val iPCWrapper = AntiSerializer.parseJson(wrapperJson)
+            if (iPCWrapper is IPCWrapper) {
+                if (currentProcessName == iPCWrapper.fromProcess) return
+                val dataJson = iPCWrapper.msgData
+                if (dataJson.isNullOrEmpty()) return
+                // Log.i("haha-0", dataJson)
+                val data = AntiSerializer.parseJson(dataJson)
+                // Log.i("haha-1", getDataSerialize(data) ?: "null")
+            }
         }
 
         fun serialize(
             fromProcess: String, msgTag: String, msgData: Any?, msgLong: Long
         ): String? {
             val serializeMsgData = getDataSerialize(msgData)
-            val wrapper = IPCWrapper(
-                fromProcess, msgTag, serializeMsgData, msgLong
-            )
+            val wrapper = IPCWrapper(fromProcess, msgTag, serializeMsgData, msgLong)
             return getDataSerialize(wrapper)
         }
     }
 }
 
 // 进程间通信包
-private data class IPCWrapper(
+internal data class IPCWrapper(
     val fromProcess: String,
     val msgTag: String,
     val msgData: String?,
