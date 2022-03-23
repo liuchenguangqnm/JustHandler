@@ -1,6 +1,5 @@
 package com.sunshine.justhandler.ipc.serializer
 
-import android.util.Log
 import org.json.JSONObject
 import java.lang.Exception
 import java.lang.reflect.Field
@@ -35,28 +34,22 @@ object UnSafeApi {
         val initArgs = arrayOfNulls<Any>(constructors[0].parameterTypes.size)
         for (index in initArgTypes.indices) {
             val argType = initArgTypes[index]
-            Log.i("haha0", "${argType?.canonicalName}=========$index")
             initArgs[index] = when {
                 java.lang.String::class.java.isAssignableFrom(argType) -> ""
                 java.lang.Integer::class.java.isAssignableFrom(argType) -> 0
                 java.lang.Long::class.java.isAssignableFrom(argType) -> 0L
                 java.lang.Float::class.java.isAssignableFrom(argType) -> 0f
                 java.lang.Double::class.java.isAssignableFrom(argType) -> 0.0
+                java.lang.Boolean::class.java.isAssignableFrom(argType) -> false
                 argType.isArray -> initArgs[index] = arrayOfNulls<Any?>(0)
-                Collection::class.java.isAssignableFrom(argType) -> initArgs[index] = listOf<Any?>()
-                Map::class.java.isAssignableFrom(argType) -> initArgs[index] = mapOf<Any?, Any?>()
+                java.util.Collection::class.java.isAssignableFrom(argType) -> listOf<Any?>()
+                java.util.Map::class.java.isAssignableFrom(argType) -> mapOf<Any?, Any?>()
                 else -> getInstance(argType)
             }
         }
-        for (index in initArgs.indices) {
-            Log.i("haha1", "${initArgs[index] ?: "null"}=========$index")
-        }
         return try {
-            Log.i("haha3", "==================================================================")
             constructors[0].newInstance(*initArgs)
         } catch (e: Exception) {
-            Log.i("haha2", "${clazz.canonicalName}============$e")
-            Log.i("haha3", "==================================================================")
             null
         }
     }
@@ -91,6 +84,7 @@ object UnSafeApi {
             java.lang.Boolean::class.java.isAssignableFrom(field.type) -> {
                 obj.optBoolean(field.name).toString().toBoolean()
             }
+            // TODO 类型需要完善
             else -> obj.opt(field.name)
         }
     }

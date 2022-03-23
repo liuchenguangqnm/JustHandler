@@ -19,16 +19,14 @@ internal class Serializer {
                 is Long -> return "$data"
                 is Float -> return "$data"
                 is Double -> return "$data"
+                is Boolean -> return "$data"
                 is Array<*> -> return getListSerialize(data.toList())
                 else -> {
                     // 首先判断是不是字典或队列
-                    for (interFace in getClasses(data.javaClass)) {
-                        if ("java.util.List" == interFace.canonicalName) {
-                            return getListSerialize(ArrayList((data as List<*>)))
-                        }
-                        if ("java.util.Map" == interFace.canonicalName) {
-                            return getMapSerialize(data as Map<*, *>)
-                        }
+                    if (java.util.Collection::class.java.isAssignableFrom(data.javaClass)) {
+                        return getListSerialize(ArrayList((data as List<*>)))
+                    } else if (java.util.Map::class.java.isAssignableFrom(data.javaClass)) {
+                        return getMapSerialize(data as Map<*, *>)
                     }
                     // 其次再尝试做普通对象的序列化
                     val loader = data.javaClass.classLoader?.javaClass?.canonicalName
@@ -122,14 +120,14 @@ internal class Serializer {
                 is Long -> return "$data"
                 is Float -> return "$data"
                 is Double -> return "$data"
+                is Boolean -> return "$data"
                 is Array<*> -> return "{\"list\":[],\"type\":\"${data.javaClass.canonicalName}\"}"
                 else -> {
                     // 首先判断是不是字典或队列
-                    for (interFace in getClasses(data.javaClass)) {
-                        if ("java.util.List" == interFace.canonicalName)
-                            return "{\"list\":[],\"type\":\"${data.javaClass.canonicalName}\"}"
-                        if ("java.util.Map" == interFace.canonicalName)
-                            return "{\"map\":{},\"type\":\"${data.javaClass.canonicalName}\"}"
+                    if (java.util.Collection::class.java.isAssignableFrom(data.javaClass)) {
+                        return "{\"list\":[],\"type\":\"${data.javaClass.canonicalName}\"}"
+                    } else if (java.util.Map::class.java.isAssignableFrom(data.javaClass)) {
+                        return "{\"map\":{},\"type\":\"${data.javaClass.canonicalName}\"}"
                     }
                     // 否则返回普通对象的Json串
                     return "{\"data\":{},\"type\":\"${data.javaClass.canonicalName}\"}"

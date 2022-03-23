@@ -52,7 +52,7 @@ class AntiSerializer {
                 clazz.isArray -> {
                     return null
                 }
-                Collection::class.java.isAssignableFrom(clazz) -> {
+                java.util.Collection::class.java.isAssignableFrom(clazz) -> {
                     return null
                 }
                 else -> null
@@ -61,7 +61,7 @@ class AntiSerializer {
 
         private fun getInstance(data: JSONObject, clazz: Class<*>): Any? {
             return when {
-                Map::class.java.isAssignableFrom(clazz) -> {
+                java.util.Map::class.java.isAssignableFrom(clazz) -> {
                     null
                 }
                 else -> {

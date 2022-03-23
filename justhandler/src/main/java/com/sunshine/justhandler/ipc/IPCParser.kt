@@ -1,5 +1,6 @@
 package com.sunshine.justhandler.ipc
 
+import android.util.Log
 import com.sunshine.justhandler.ipc.Serializer.Companion.getDataSerialize
 
 /**
