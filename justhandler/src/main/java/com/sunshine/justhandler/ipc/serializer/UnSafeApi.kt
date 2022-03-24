@@ -56,14 +56,14 @@ object UnSafeApi {
         }
     }
 
-    // 设置成员变量的值
+    // 设置对象成员变量的值
     fun setFieldData(jsonObj: JSONObject, field: Field, instance: Any?) {
         val fData = getFieldData(jsonObj, field) ?: return
         val fOffset = objectFieldOffset.invoke(unSafe, field) ?: return
         putObject.invoke(unSafe, instance, fOffset, fData)
     }
 
-    // 获取成员变量的值
+    // 解析Json成员变量的值
     private fun getFieldData(obj: JSONObject, field: Field): Any? {
         return when {
             java.lang.String::class.java.isAssignableFrom(field.type) -> {
