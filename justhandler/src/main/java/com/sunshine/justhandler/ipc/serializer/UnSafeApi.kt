@@ -1,6 +1,5 @@
 package com.sunshine.justhandler.ipc.serializer
 
-import com.sunshine.justhandler.ipc.AntiSerializer
 import org.json.JSONObject
 import java.lang.Exception
 import java.lang.reflect.Field

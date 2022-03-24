@@ -1,4 +1,4 @@
-package com.sunshine.justhandler.ipc
+package com.sunshine.justhandler.ipc.serializer
 
 import java.lang.Exception
 import java.lang.reflect.Field

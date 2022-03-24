@@ -1,7 +1,8 @@
 package com.sunshine.justhandler.ipc
 
 import android.util.Log
-import com.sunshine.justhandler.ipc.Serializer.Companion.getDataSerialize
+import com.sunshine.justhandler.ipc.serializer.AntiSerializer
+import com.sunshine.justhandler.ipc.serializer.Serializer.Companion.getDataSerialize
 
 /**
  * created by: Sunshine at 2022/2/25
@@ -9,7 +10,7 @@ import com.sunshine.justhandler.ipc.Serializer.Companion.getDataSerialize
  */
 internal class IPCParser {
     companion object {
-        fun antiSerialize(
+        inline fun antiSerialize(
             wrapperJson: String, currentProcessName: String,
             invoke: (msgTag: String, msgData: Any?, post: Long) -> Unit
         ) {

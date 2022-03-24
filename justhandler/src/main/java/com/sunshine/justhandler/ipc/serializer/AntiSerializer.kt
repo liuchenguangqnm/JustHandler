@@ -1,6 +1,5 @@
-package com.sunshine.justhandler.ipc
+package com.sunshine.justhandler.ipc.serializer
 
-import com.sunshine.justhandler.ipc.serializer.UnSafeApi
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
