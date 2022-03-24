@@ -38,6 +38,7 @@ internal class Serializer {
             }
         }
 
+        // 获取list或数组对象的Json
         private fun getListSerialize(list: List<*>): String {
             val strBuf = StringBuffer("{\"list\":[")
             for (index in list.indices) {
@@ -55,6 +56,7 @@ internal class Serializer {
             return strBuf.toString()
         }
 
+        // 获取map对象的Json
         private fun getMapSerialize(map: Map<*, *>): String {
             val strBuf = StringBuffer("{\"map\":{")
             map.entries.forEach {
@@ -79,7 +81,7 @@ internal class Serializer {
             return strBuf.toString()
         }
 
-
+        // 获取普通对象的Json
         private fun getAnySerialize(data: Any, isBootLoader: Boolean): String {
             val strBuf = StringBuffer("{\"data\":{")
             try {
@@ -113,6 +115,7 @@ internal class Serializer {
             return strBuf.toString()
         }
 
+        // 获取官方类对象的Json（抛弃内部对象型成员的解析，以免方法栈溢出Gson也用了类似的套路）
         private fun getBootSerialize(data: Any): String {
             when (data) {
                 is String -> return "\"${data}\""

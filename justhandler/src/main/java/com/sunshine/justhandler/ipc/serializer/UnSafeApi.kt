@@ -1,5 +1,6 @@
 package com.sunshine.justhandler.ipc.serializer
 
+import com.sunshine.justhandler.ipc.AntiSerializer
 import org.json.JSONObject
 import java.lang.Exception
 import java.lang.reflect.Field
@@ -26,6 +27,7 @@ object UnSafeApi {
         )
     }
 
+    // 通过反射new对象
     fun getInstance(clazz: Class<*>): Any? {
         val constructors = clazz.declaredConstructors
         if (constructors.isEmpty()) return null
@@ -54,16 +56,14 @@ object UnSafeApi {
         }
     }
 
-    private fun objectFieldOffset(field: Field): Any? {
-        return objectFieldOffset.invoke(unSafe, field)
-    }
-
+    // 设置成员变量的值
     fun setFieldData(jsonObj: JSONObject, field: Field, instance: Any?) {
         val fData = getFieldData(jsonObj, field) ?: return
-        val fOffset = objectFieldOffset(field) ?: return
+        val fOffset = objectFieldOffset.invoke(unSafe, field) ?: return
         putObject.invoke(unSafe, instance, fOffset, fData)
     }
 
+    // 获取成员变量的值
     private fun getFieldData(obj: JSONObject, field: Field): Any? {
         return when {
             java.lang.String::class.java.isAssignableFrom(field.type) -> {
@@ -84,8 +84,11 @@ object UnSafeApi {
             java.lang.Boolean::class.java.isAssignableFrom(field.type) -> {
                 obj.optBoolean(field.name).toString().toBoolean()
             }
-            // TODO 类型需要完善
-            else -> obj.opt(field.name)
+            else -> {
+                val fData = obj.opt(field.name)
+                return if (fData == null) null
+                else AntiSerializer.parseJson(fData.toString())
+            }
         }
     }
 }

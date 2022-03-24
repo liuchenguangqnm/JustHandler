@@ -20,7 +20,7 @@ internal class IPCParser {
                 if (dataJson.isNullOrEmpty()) return
                 // Log.i("haha-0", dataJson)
                 val data = AntiSerializer.parseJson(dataJson)
-                // Log.i("haha-1", getDataSerialize(data) ?: "null")
+                Log.i("haha-1", getDataSerialize(data) ?: "null")
             }
         }
 

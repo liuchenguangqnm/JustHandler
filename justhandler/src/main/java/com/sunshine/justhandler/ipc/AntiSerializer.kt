@@ -47,22 +47,24 @@ class AntiSerializer {
             return result
         }
 
+        // TODO 数组类型Json解析
         private fun getInstance(data: JSONArray, clazz: Class<*>): Any? {
             return when {
                 clazz.isArray -> {
-                    return null
+                    return arrayOfNulls<Any?>(0)
                 }
                 java.util.Collection::class.java.isAssignableFrom(clazz) -> {
-                    return null
+                    return listOf<Any?>()
                 }
                 else -> null
             }
         }
 
+        // TODO 对象类型Json解析
         private fun getInstance(data: JSONObject, clazz: Class<*>): Any? {
             return when {
                 java.util.Map::class.java.isAssignableFrom(clazz) -> {
-                    null
+                    hashMapOf<Any?, Any?>()
                 }
                 else -> {
                     // 初始化对象
