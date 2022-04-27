@@ -15,7 +15,6 @@ data class MsgBean(
         0, "asdf", Handler(Looper.getMainLooper()), Exception()
     ),
     val map: Map<*, *> = mutableMapOf<Any?, Any?>(
-        Pair(10, 0), Pair("ksksk", "asdf"),
-        Pair(100L, Handler(Looper.getMainLooper())), Pair(10.1, Exception())
+        Pair(10, 0), Pair("ksksk", "asdf"), Pair(Test(), "asdf"), Pair(100L, "asdf")
     )
 )

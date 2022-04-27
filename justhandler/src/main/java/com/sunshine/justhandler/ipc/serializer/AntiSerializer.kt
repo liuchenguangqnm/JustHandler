@@ -28,7 +28,7 @@ class AntiSerializer {
             if (type.isNullOrEmpty()) return result
             // 获取class对象
             val clazz = Class.forName(type)
-            // 获取目标对象
+            // 获取目标对象 TODO 需要添加基础数据类型判断
             try {
                 if (data != null) {
                     val obj = getInstance(data, clazz)
@@ -46,7 +46,7 @@ class AntiSerializer {
             return result
         }
 
-        // TODO 数组类型Json解析
+        // TODO 数组类型Json解析（需要添加list构造和内部数据解析逻辑）
         private fun getInstance(data: JSONArray, clazz: Class<*>): Any? {
             return when {
                 clazz.isArray -> {
@@ -59,7 +59,7 @@ class AntiSerializer {
             }
         }
 
-        // TODO 对象类型Json解析
+        // TODO 对象类型Json解析（需要添加map构造和内部数据解析逻辑，注意key 为 "null"或split后为空串的情况）
         private fun getInstance(data: JSONObject, clazz: Class<*>): Any? {
             return when {
                 java.util.Map::class.java.isAssignableFrom(clazz) -> {

@@ -11,15 +11,33 @@ import java.util.*
  */
 internal class Serializer {
     companion object {
-        fun getDataSerialize(data: Any?): String? {
+        fun getDataSerialize(data: Any?, isListOrDicElement: Boolean? = false): String? {
             if (data == null) return null
             when (data) {
-                is String -> return "\"${data}\""
-                is Int -> return "$data"
-                is Long -> return "$data"
-                is Float -> return "$data"
-                is Double -> return "$data"
-                is Boolean -> return "$data"
+                is String -> {
+                    return if (isListOrDicElement != true) "\"${data}\""
+                    else "\"${data.javaClass.canonicalName}*${data}\""
+                }
+                is Int -> {
+                    return if (isListOrDicElement != true) "$data"
+                    else "\"${data.javaClass.canonicalName}*${data}\""
+                }
+                is Long -> {
+                    return if (isListOrDicElement != true) "$data"
+                    else "\"${data.javaClass.canonicalName}*${data}\""
+                }
+                is Float -> {
+                    return if (isListOrDicElement != true) "$data"
+                    else "\"${data.javaClass.canonicalName}*${data}\""
+                }
+                is Double -> {
+                    return if (isListOrDicElement != true) "$data"
+                    else "\"${data.javaClass.canonicalName}*${data}\""
+                }
+                is Boolean -> {
+                    return if (isListOrDicElement != true) "$data"
+                    else "\"${data.javaClass.canonicalName}*${data}\""
+                }
                 is Array<*> -> return getListSerialize(data.toList())
                 else -> {
                     // 首先判断是不是字典或队列
@@ -44,11 +62,7 @@ internal class Serializer {
             for (index in list.indices) {
                 // node
                 val indexValue = list[index]
-                val value = when {
-                    indexValue is String -> "\"$indexValue\""
-                    indexValue != null -> getDataSerialize(indexValue)
-                    else -> null
-                }
+                val value = getDataSerialize(indexValue, true)
                 if (value != null) strBuf.append("$value,")
             }
             if (strBuf.endsWith(",")) strBuf.delete(strBuf.length - 1, strBuf.length)
@@ -62,19 +76,18 @@ internal class Serializer {
             map.entries.forEach {
                 // key
                 val key = when {
-                    it.key is String -> "\"${it.key}\""
+                    it.key is String -> "\"${(it.key)!!.javaClass.canonicalName}*${it.key}\""
                     it.key != null -> {
-                        "\"${(it.key)!!.javaClass.canonicalName}*${getDataSerialize(it.key)}\""
+                        // 如果key是一个非基础数据类型和字符串的对象，则将对象转为json串
+                        var dataJson = getDataSerialize(it.key)
+                        dataJson = dataJson?.replace("\"", "\\\"") ?: "null" // json字符串的引号要加斜杠
+                        "\"${(it.key)!!.javaClass.canonicalName}*${dataJson}\""
                     }
-                    else -> null
+                    else -> "null"
                 }
                 // value
-                val value = when {
-                    it.value is String -> "\"${it.value}\""
-                    it.value != null -> getDataSerialize(it.value)
-                    else -> null
-                }
-                if (!key.isNullOrEmpty()) strBuf.append("$key:$value,")
+                val value = getDataSerialize(it.value, true)
+                strBuf.append("$key:$value,")
             }
             if (strBuf.endsWith(",")) strBuf.delete(strBuf.length - 1, strBuf.length)
             strBuf.append("},\"type\":\"${map.javaClass.canonicalName}\"}")

@@ -15,13 +15,14 @@ internal class IPCParser {
             invoke: (msgTag: String, msgData: Any?, post: Long) -> Unit
         ) {
             val iPCWrapper = AntiSerializer.parseJson(wrapperJson)
+            Log.i("haha-1", getDataSerialize(wrapperJson) ?: "null")
             if (iPCWrapper is IPCWrapper) {
                 if (currentProcessName == iPCWrapper.fromProcess) return
                 val dataJson = iPCWrapper.msgData
                 if (dataJson.isNullOrEmpty()) return
                 // Log.i("haha-0", dataJson)
-                val data = AntiSerializer.parseJson(dataJson)
-                Log.i("haha-1", getDataSerialize(data) ?: "null")
+//                val data = AntiSerializer.parseJson(dataJson)
+                // Log.i("haha-1", getDataSerialize(data) ?: "null")
             }
         }
 
