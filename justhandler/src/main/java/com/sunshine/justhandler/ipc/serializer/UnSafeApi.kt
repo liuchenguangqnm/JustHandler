@@ -85,8 +85,9 @@ object UnSafeApi {
             }
             else -> {
                 val fData = obj.opt(field.name)
-                return if (fData == null) null
-                else AntiSerializer.parseJson(fData.toString())
+                val fDataType = fData.javaClass.canonicalName
+                return if (fData == null || fDataType == null) null
+                else AntiSerializer.parseJson(fData.toString(), fDataType)
             }
         }
     }

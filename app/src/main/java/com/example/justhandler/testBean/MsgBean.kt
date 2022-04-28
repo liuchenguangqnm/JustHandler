@@ -1,7 +1,5 @@
 package com.example.justhandler.testBean
 
-import android.os.Handler
-import android.os.Looper
 import java.lang.Exception
 
 /**
@@ -11,10 +9,9 @@ import java.lang.Exception
 data class MsgBean(
     val tag: String,
     val content: String,
-    val list: List<*> = mutableListOf<Any?>(
-        0, "asdf", Handler(Looper.getMainLooper()), Exception()
-    ),
+    val list: List<String> = mutableListOf("asdf", "asdf1"),
     val map: Map<*, *> = mutableMapOf<Any?, Any?>(
-        Pair(10, 0), Pair("ksksk", "asdf"), Pair(Test(), "asdf"), Pair(100L, "asdf")
+        Pair(10, 0), Pair("ksksk", "asdf"),
+        Pair(Test(), "asdf"), Pair(100L, "asdf"), Pair(10f, Exception("我尼玛这是个异常"))
     )
 )

@@ -15,7 +15,7 @@ internal class Serializer {
             if (data == null) return null
             when (data) {
                 is String -> {
-                    return if (isListOrDicElement != true) "\"${data}\""
+                    return if (isListOrDicElement != true) "$data"
                     else "\"${data.javaClass.canonicalName}*${data}\""
                 }
                 is Int -> {
@@ -131,7 +131,7 @@ internal class Serializer {
         // 获取官方类对象的Json（抛弃内部对象型成员的解析，以免方法栈溢出Gson也用了类似的套路）
         private fun getBootSerialize(data: Any): String {
             when (data) {
-                is String -> return "\"${data}\""
+                is String -> return "$data"
                 is Int -> return "$data"
                 is Long -> return "$data"
                 is Float -> return "$data"

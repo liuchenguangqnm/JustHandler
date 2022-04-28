@@ -29,9 +29,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         msgExecutor.scheduleAtFixedRate({
-            // JustHandler.sendMsg("100", Handler(Looper.getMainLooper()))
-            // JustHandler.sendMsg("200", Exception("200"))
             JustHandler.sendMsg("200", MsgBean("200", "王德发200"))
+            // JustHandler.sendMsg("200", "王德发200")
         }, 0, 1500, TimeUnit.MILLISECONDS)
 
         findViewById<View>(R.id.iv_img).setOnClickListener {

@@ -14,7 +14,7 @@ import kotlin.collections.LinkedHashMap
  */
 class AntiSerializer {
     companion object {
-        fun parseJson(json: String): Any? {
+        fun parseJson(json: String, dataType: String): Any? {
             val jsonObj = try {
                 JSONObject(json)
             } catch (e: JSONException) {
@@ -53,7 +53,24 @@ class AntiSerializer {
                     return arrayOfNulls<Any?>(0)
                 }
                 java.util.Collection::class.java.isAssignableFrom(clazz) -> {
-                    return listOf<Any?>()
+                    // 初始化集合对象
+                    val collection = if ("java.util.Arrays.ArrayList" == clazz.canonicalName) {
+                        arrayListOf<Any>()
+                    } else UnSafeApi.getInstance(clazz) ?: return null
+                    // 反射得到集合的add方法
+                    val methodAdd = try {
+                        clazz.getDeclaredMethod("add", Object().javaClass)
+                    } catch (e: Exception) {
+                        null
+                    }
+                    methodAdd?.isAccessible = true
+                    // 添加元素
+                    for (index in 0 until data.length()) {
+                        data[index]
+                    }
+                    // wosao
+                    // methodAdd?.invoke(collection, 10)
+                    return collection
                 }
                 else -> null
             }
@@ -64,6 +81,7 @@ class AntiSerializer {
             return when {
                 java.util.Map::class.java.isAssignableFrom(clazz) -> {
                     hashMapOf<Any?, Any?>()
+
                 }
                 else -> {
                     // 初始化对象

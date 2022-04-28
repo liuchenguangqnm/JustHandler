@@ -3,6 +3,7 @@ package com.sunshine.justhandler.ipc
 import android.util.Log
 import com.sunshine.justhandler.ipc.serializer.AntiSerializer
 import com.sunshine.justhandler.ipc.serializer.Serializer.Companion.getDataSerialize
+import org.json.JSONObject
 
 /**
  * created by: Sunshine at 2022/2/25
@@ -14,23 +15,28 @@ internal class IPCParser {
             wrapperJson: String, currentProcessName: String,
             invoke: (msgTag: String, msgData: Any?, post: Long) -> Unit
         ) {
-            val iPCWrapper = AntiSerializer.parseJson(wrapperJson)
-            Log.i("haha-1", getDataSerialize(wrapperJson) ?: "null")
-            if (iPCWrapper is IPCWrapper) {
-                if (currentProcessName == iPCWrapper.fromProcess) return
-                val dataJson = iPCWrapper.msgData
-                if (dataJson.isNullOrEmpty()) return
-                // Log.i("haha-0", dataJson)
-//                val data = AntiSerializer.parseJson(dataJson)
-                // Log.i("haha-1", getDataSerialize(data) ?: "null")
-            }
+            Log.i("haha-0", wrapperJson)
+
+            // 前置判断
+            val iPCWrapperJSONObj = JSONObject(wrapperJson).optJSONObject("data") ?: return
+            val fromProcess = iPCWrapperJSONObj.optString("fromProcess")
+            if (currentProcessName == fromProcess) return
+            // 关键参数获取
+            val msgTag = iPCWrapperJSONObj.optString("msgTag")
+            val msgData = iPCWrapperJSONObj.optString("msgData")
+            val dataType = iPCWrapperJSONObj.optString("dataType")
+            val msgLong = iPCWrapperJSONObj.optLong("msgLong")
+
+            val data = AntiSerializer.parseJson(msgData, dataType)
+            Log.i("haha-1", getDataSerialize(data) ?: "null")
         }
 
         fun serialize(
             fromProcess: String, msgTag: String, msgData: Any?, msgLong: Long
         ): String? {
             val serializeMsgData = getDataSerialize(msgData)
-            val wrapper = IPCWrapper(fromProcess, msgTag, serializeMsgData, msgLong)
+            val dataType = msgData?.javaClass?.canonicalName ?: ""
+            val wrapper = IPCWrapper(fromProcess, msgTag, serializeMsgData, dataType, msgLong)
             return getDataSerialize(wrapper)
         }
     }
@@ -41,5 +47,6 @@ internal data class IPCWrapper(
     val fromProcess: String,
     val msgTag: String,
     val msgData: String?,
+    val dataType: String,
     val msgLong: Long?
 )
