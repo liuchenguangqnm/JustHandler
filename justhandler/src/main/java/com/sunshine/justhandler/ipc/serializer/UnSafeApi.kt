@@ -42,7 +42,7 @@ object UnSafeApi {
                 java.lang.Float::class.java.isAssignableFrom(argType) -> 0f
                 java.lang.Double::class.java.isAssignableFrom(argType) -> 0.0
                 java.lang.Boolean::class.java.isAssignableFrom(argType) -> false
-                argType.isArray -> initArgs[index] = arrayOfNulls<Any?>(0)
+                argType.isArray -> arrayOfNulls<Any?>(0)
                 java.util.Collection::class.java.isAssignableFrom(argType) -> listOf<Any?>()
                 java.util.Map::class.java.isAssignableFrom(argType) -> mapOf<Any?, Any?>()
                 else -> getInstance(argType)

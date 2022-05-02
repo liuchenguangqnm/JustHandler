@@ -38,7 +38,7 @@ internal class Serializer {
                     return if (isListOrDicElement != true) "$data"
                     else "\"${data.javaClass.canonicalName}*${data}\""
                 }
-                is Array<*> -> return getListSerialize(data.toList())
+                is Array<*> -> return getArraySerialize(data)
                 else -> {
                     // 首先判断是不是字典或队列
                     if (java.util.Collection::class.java.isAssignableFrom(data.javaClass)) {
@@ -56,7 +56,21 @@ internal class Serializer {
             }
         }
 
-        // 获取list或数组对象的Json
+        // 获取数组对象的Json
+        private fun getArraySerialize(list: Array<*>): String {
+            val strBuf = StringBuffer("{\"list\":[")
+            for (index in list.indices) {
+                // node
+                val indexValue = list[index]
+                val value = getDataSerialize(indexValue, true)
+                if (value != null) strBuf.append("$value,")
+            }
+            if (strBuf.endsWith(",")) strBuf.delete(strBuf.length - 1, strBuf.length)
+            strBuf.append("],\"type\":\"${list.javaClass.canonicalName}\"}")
+            return strBuf.toString()
+        }
+
+        // 获取list对象的Json
         private fun getListSerialize(list: List<*>): String {
             val strBuf = StringBuffer("{\"list\":[")
             for (index in list.indices) {

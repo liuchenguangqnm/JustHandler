@@ -28,7 +28,7 @@ internal class IPCParser {
             val msgLong = iPCWrapperJSONObj.optLong("msgLong")
 
             val data = AntiSerializer.parseJson(msgData, dataType)
-            Log.i("haha-1", getDataSerialize(data) ?: "null")
+            Log.i("haha-1", "$data===========${data?.javaClass?.canonicalName ?: "null"}")
         }
 
         fun serialize(

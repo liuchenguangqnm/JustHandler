@@ -9,7 +9,7 @@ import java.lang.Exception
 data class MsgBean(
     val tag: String,
     val content: String,
-    val list: List<String> = mutableListOf("asdf", "asdf1"),
+    val list: List<Any> = mutableListOf("asdf", "1", Test()),
     val map: Map<*, *> = mutableMapOf<Any?, Any?>(
         Pair(10, 0), Pair("ksksk", "asdf"),
         Pair(Test(), "asdf"), Pair(100L, "asdf"), Pair(10f, Exception("我尼玛这是个异常"))
