@@ -4,6 +4,7 @@ import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import java.lang.reflect.Field
+import java.lang.reflect.Method
 import java.lang.reflect.Modifier
 import java.util.*
 import kotlin.collections.LinkedHashMap
@@ -60,7 +61,7 @@ class AntiSerializer {
         }
 
         private fun getInstance(data: JSONArray, clazz: Class<*>): Any? {
-            return when {
+            when {
                 clazz.isArray -> {
                     val array = arrayOfNulls<Any?>(data.length())
                     for (index in 0 until data.length()) {
@@ -86,12 +87,7 @@ class AntiSerializer {
                         arrayListOf<Any>()
                     } else UnSafeApi.getInstance(clazz) ?: return null
                     // 反射得到集合的add方法
-                    val methodAdd = try {
-                        clazz.getDeclaredMethod("add", Object().javaClass)
-                    } catch (e: Exception) {
-                        null
-                    }
-                    methodAdd?.isAccessible = true
+                    val methodAdd = getMethod(clazz, "add", Object().javaClass)
                     // 添加元素
                     for (index in 0 until data.length()) {
                         val indexData = data[index]?.toString() ?: ""
@@ -110,28 +106,49 @@ class AntiSerializer {
                     }
                     return collection
                 }
-                else -> null
+                else -> return null
             }
         }
 
-        // TODO 对象类型Json解析（需要添加map构造和内部数据解析逻辑，注意key 为 "null"或split后为空串的情况）
         private fun getInstance(data: JSONObject, clazz: Class<*>): Any? {
-            return when {
+            when {
                 java.util.Map::class.java.isAssignableFrom(clazz) -> {
                     // 初始化集合对象
                     val map = UnSafeApi.getInstance(clazz) ?: return null
                     // 反射得到集合的put方法
-                    val methodPut = try {
-                        clazz.getDeclaredMethod("put", Object().javaClass)
-                    } catch (e: Exception) {
-                        null
-                    }
-                    methodPut?.isAccessible = true
+                    val methodPut = getMethod(clazz, "put", Object().javaClass, Object().javaClass)
                     // 添加元素
-                    data.keys().forEach { key ->
+                    data.keys().forEach { keyStr ->
+                        // 获取真正的key
+                        val keyIndex = keyStr.indexOfFirst { "*" == it.toString() }
+                        val key = if (keyIndex <= 0 || keyIndex == keyStr.length) {
+                            null
+                        } else {
+                            val keyType = keyStr.substring(0, keyIndex)
+                            val keyJson = keyStr.substring(keyIndex + 1, keyStr.length)
+                            parseJson(keyJson, keyType)
+                        }
+                        if (key != null) {
+                            // 获取真正的value
+                            val valueStr = data.opt(keyStr)?.toString() ?: ""
+                            val valueIndex = valueStr.indexOfFirst { "*" == it.toString() }
+                            val value = if (valueIndex <= 0 || valueIndex == valueStr.length) {
+                                if (data.opt(keyStr) is JSONObject) {
+                                    val dataType =
+                                        (data.opt(keyStr) as JSONObject).optString("type")
+                                    if (dataType.isEmpty()) null
+                                    else parseJson(valueStr, dataType)
+                                } else null
 
+                            } else {
+                                val valueType = valueStr.substring(0, valueIndex)
+                                val valueJson = valueStr.substring(valueIndex + 1, valueStr.length)
+                                parseJson(valueJson, valueType)
+                            }
+                            methodPut?.invoke(map, key, value)
+                        }
                     }
-                    map
+                    return map
                 }
                 else -> {
                     // 初始化对象
@@ -140,9 +157,28 @@ class AntiSerializer {
                     for (f in getFields(clazz)) {
                         UnSafeApi.setFieldData(data, f, instance)
                     }
-                    instance
+                    return instance
                 }
             }
+        }
+
+        private fun getMethod(
+            inputClass: Class<*>, methodName: String, vararg parameterTypes: Class<*>
+        ): Method? {
+            val classes = getClasses(inputClass)
+            for (index in classes.indices) {
+                val clazz = classes[index]
+                val method = try {
+                    clazz.getDeclaredMethod(methodName, *parameterTypes)
+                } catch (e: Exception) {
+                    null
+                }
+                if (method != null) {
+                    method.isAccessible = true
+                    return method
+                }
+            }
+            return null
         }
 
         private fun getFields(inputClass: Class<*>): LinkedList<Field> {

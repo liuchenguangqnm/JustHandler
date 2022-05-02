@@ -1,6 +1,5 @@
 package com.sunshine.justhandler.ipc
 
-import android.util.Log
 import com.sunshine.justhandler.ipc.serializer.AntiSerializer
 import com.sunshine.justhandler.ipc.serializer.Serializer.Companion.getDataSerialize
 import org.json.JSONObject
@@ -15,8 +14,7 @@ internal class IPCParser {
             wrapperJson: String, currentProcessName: String,
             invoke: (msgTag: String, msgData: Any?, post: Long) -> Unit
         ) {
-            Log.i("haha-0", wrapperJson)
-
+            // Log.i("haha-0", wrapperJson)
             // 前置判断
             val iPCWrapperJSONObj = JSONObject(wrapperJson).optJSONObject("data") ?: return
             val fromProcess = iPCWrapperJSONObj.optString("fromProcess")
@@ -26,9 +24,11 @@ internal class IPCParser {
             val msgData = iPCWrapperJSONObj.optString("msgData")
             val dataType = iPCWrapperJSONObj.optString("dataType")
             val msgLong = iPCWrapperJSONObj.optLong("msgLong")
-
+            // 反序列化数据
             val data = AntiSerializer.parseJson(msgData, dataType)
-            Log.i("haha-1", "$data===========${data?.javaClass?.canonicalName ?: "null"}")
+            // Log.i("haha-1", "$data===========${data?.javaClass?.canonicalName ?: "null"}")
+            // 方法回调
+            invoke.invoke(msgTag, data, msgLong)
         }
 
         fun serialize(
